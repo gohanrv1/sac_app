@@ -5,6 +5,7 @@ Servicios de gestión de usuarios y reportes
 
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
+from flasgger import Swagger
 import mysql.connector
 from mysql.connector import Error
 import hashlib
@@ -18,6 +19,35 @@ from functools import wraps
 
 app = Flask(__name__)
 CORS(app)
+
+# Configurar Swagger
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "apispec",
+            "route": "/apispec.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/apidocs"
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "API InfoTaxi",
+        "description": "API REST para Sistema InfoTaxi - Servicios de gestión de usuarios y reportes",
+        "version": "1.0.0"
+    },
+    "basePath": "/",
+    "schemes": ["http", "https"]
+}
+
+swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
 # ==================== CONFIGURACIÓN BASE DE DATOS ====================
 DB_CONFIG = {
@@ -87,7 +117,39 @@ def verificar_usuario(f):
 def verificar_usuario_existe():
     """
     Verificar si un usuario existe por número de celular
-    Body: { "celular": "3007471199" }
+    ---
+    tags:
+      - Usuarios
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - celular
+          properties:
+            celular:
+              type: string
+              example: "3007471199"
+    responses:
+      200:
+        description: Respuesta exitosa
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            exists:
+              type: boolean
+            usuario:
+              type: object
+            message:
+              type: string
+      400:
+        description: Error de validación
+      500:
+        description: Error del servidor
     """
     data = request.get_json()
     celular = data.get('celular')
@@ -143,12 +205,42 @@ def verificar_usuario_existe():
 def crear_usuario():
     """
     Crear nuevo usuario con rol 'usuario'
-    Body: {
-        "username": "email@ejemplo.com",
-        "nombres": "Nombre Completo",
-        "celular": "3001234567",
-        "password": "contraseña123"
-    }
+    ---
+    tags:
+      - Usuarios
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required:
+            - username
+            - nombres
+            - celular
+            - password
+          properties:
+            username:
+              type: string
+              example: "email@ejemplo.com"
+            nombres:
+              type: string
+              example: "Nombre Completo"
+            celular:
+              type: string
+              example: "3001234567"
+            password:
+              type: string
+              example: "contraseña123"
+    responses:
+      201:
+        description: Usuario creado exitosamente
+      400:
+        description: Error de validación
+      409:
+        description: Usuario ya existe
+      500:
+        description: Error del servidor
     """
     data = request.get_json()
     
@@ -614,7 +706,24 @@ def editar_persona(id):
 # ==================== RUTA DE PRUEBA ====================
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """Verificar que la API está funcionando"""
+    """
+    Verificar que la API está funcionando
+    ---
+    tags:
+      - Health
+    responses:
+      200:
+        description: API funcionando correctamente
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+            timestamp:
+              type: string
+    """
     return jsonify({
         'success': True,
         'message': 'API InfoTaxi funcionando correctamente',
