@@ -1223,7 +1223,7 @@ def obtener_estadisticas():
             conn.close()
 
 # ==================== RUTA DE PRUEBA ====================
-@app.route('/api/health', methods=['GET'])
+@app.route('/api/health', methods=['GET', 'OPTIONS'])
 def health_check():
     """
     Verificar que la API está funcionando
@@ -1245,18 +1245,35 @@ def health_check():
             database:
               type: string
     """
-    conn = get_db_connection()
-    db_status = "Conectada" if conn else "Error de conexión"
-    if conn and conn.is_connected():
-        conn.close()
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        return response
     
-    return jsonify({
-        'success': True,
-        'message': 'API InfoTaxi funcionando correctamente',
-        'timestamp': datetime.now().isoformat(),
-        'database': db_status,
-        'swagger_docs': '/apidocs/'
-    }), 200
+    try:
+        conn = get_db_connection()
+        db_status = "Conectada" if conn else "Error de conexión"
+        if conn and conn.is_connected():
+            conn.close()
+        
+        response = jsonify({
+            'success': True,
+            'message': 'API InfoTaxi funcionando correctamente',
+            'timestamp': datetime.now().isoformat(),
+            'database': db_status,
+            'swagger_docs': '/apidocs/'
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 200
+    except Exception as e:
+        response = jsonify({
+            'success': False,
+            'message': f'Error en health check: {str(e)}'
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 500
 
 # ==================== RUTA PRINCIPAL ====================
 @app.route('/', methods=['GET'])
