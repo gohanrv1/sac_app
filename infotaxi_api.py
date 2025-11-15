@@ -85,22 +85,48 @@ swagger_template = {
 # Inicializar Swagger con configuración dinámica
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
+# Sobrescribir el endpoint de apispec.json para usar el host dinámico del servidor
+@app.route('/apispec.json', methods=['GET', 'OPTIONS'])
+def get_swagger_spec():
+    """Obtener especificación de Swagger con host dinámico basado en la petición"""
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Accept,X-User-Celular,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,OPTIONS")
+        return response
+    
+    # Obtener la especificación base de Swagger
+    spec = swagger.get_apispecs()
+    
+    # Actualizar con el host y scheme actuales de la petición
+    # Esto asegura que Swagger UI use el host correcto (local o servidor)
+    spec['host'] = request.host
+    spec['schemes'] = [request.scheme]
+    
+    response = jsonify(spec)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept,X-User-Celular,Authorization')
+    return response
+
 # Manejar preflight requests (OPTIONS)
 @app.before_request
 def handle_preflight():
     if request.method == "OPTIONS":
         response = jsonify({'status': 'ok'})
         response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization,Accept")
         response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        response.headers.add('Access-Control-Max-Age', "3600")
         return response
 
 # Manejar preflight requests
 @app.after_request
 def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-User-Celular,Authorization')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-User-Celular,Authorization,Accept')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Max-Age', '3600')
     return response
 
 # Manejar errores globales (solo para excepciones no capturadas)
