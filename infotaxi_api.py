@@ -14,6 +14,7 @@ import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 import io
+import os
 from functools import wraps
 
 app = Flask(__name__)
@@ -53,6 +54,8 @@ swagger_config = {
     "specs_route": "/apidocs/"
 }
 
+# Configuración dinámica de Swagger
+# El host se detectará automáticamente desde la petición
 swagger_template = {
     "swagger": "2.0",
     "info": {
@@ -64,9 +67,9 @@ swagger_template = {
             "email": "jandrezapata@hotmail.com"
         }
     },
-    "host": "localhost:5000",
+    # No especificar host para que use el host actual de la petición
     "basePath": "/",
-    "schemes": ["http"],
+    "schemes": ["http", "https"],
     "securityDefinitions": {
         "CelularAuth": {
             "type": "apiKey",
@@ -79,6 +82,7 @@ swagger_template = {
     "produces": ["application/json"]
 }
 
+# Inicializar Swagger con configuración dinámica
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
 # Manejar preflight requests (OPTIONS)
