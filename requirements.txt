@@ -1,0 +1,11 @@
+Flask==3.0.2
+flask-cors==4.0.1
+mysql-connector-python==8.3.0
+Flasgger==0.9.7.1
+
+# Utilidades (si usas Excel u otros procesos)
+pandas==2.2.2
+openpyxl==3.1.2
+
+# Para manejar .env si lo requieres
+python-dotenv==1.0.1
