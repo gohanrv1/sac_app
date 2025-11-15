@@ -255,7 +255,13 @@ def crear_usuario():
       500:
         description: Error del servidor
     """
-    data = request.get_json()
+    try:
+        data = request.get_json() or {}
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'Error al procesar el JSON: ' + str(e)
+        }), 400
     
     # Validar campos requeridos
     required = ['username', 'nombres', 'celular', 'password']
@@ -717,12 +723,23 @@ def editar_persona(id):
             conn.close()
 
 # ==================== MANEJAR OPTIONS PARA CORS ====================
+@app.before_request
+def handle_preflight():
+    """Manejar solicitudes OPTIONS (preflight)"""
+    if request.method == "OPTIONS":
+        response = jsonify({})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization,X-User-Celular")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        return response
+
 @app.after_request
 def after_request(response):
     """Agregar headers CORS a todas las respuestas"""
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-User-Celular')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
     return response
 
 # ==================== RUTA DE PRUEBA ====================
@@ -754,4 +771,6 @@ def health_check():
 
 # ==================== INICIAR SERVIDOR ====================
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # En producción, usar un servidor WSGI como gunicorn
+    # gunicorn -w 4 -b 0.0.0.0:5000 infotaxi_api:app
+    app.run(debug=False, host='0.0.0.0', port=5000, threaded=True)
