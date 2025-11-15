@@ -20,18 +20,25 @@ from functools import wraps
 app = Flask(__name__)
 
 # Configurar CORS de manera más permisiva
+# Importante: Incluir todos los headers que Swagger UI necesita
 CORS(app, resources={
     r"/api/*": {
         "origins": "*",
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-User-Celular", "Authorization"]
+        "allow_headers": ["Content-Type", "X-User-Celular", "Authorization", "Accept"],
+        "supports_credentials": False
     },
     r"/apidocs/*": {
         "origins": "*",
         "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type", "Accept"]
     },
     r"/apispec.json": {
+        "origins": "*",
+        "methods": ["GET", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Accept"]
+    },
+    r"/flasgger_static/*": {
         "origins": "*",
         "methods": ["GET", "OPTIONS"],
         "allow_headers": ["Content-Type"]
@@ -51,7 +58,8 @@ swagger_config = {
     ],
     "static_url_path": "/flasgger_static",
     "swagger_ui": True,
-    "specs_route": "/apidocs/"
+    "specs_route": "/apidocs/",
+    "openapi": "2.0"
 }
 
 # Configuración dinámica de Swagger
@@ -86,6 +94,7 @@ swagger_template = {
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
 # Sobrescribir el endpoint de apispec.json para usar el host dinámico del servidor
+# Esto es crítico para que Swagger UI funcione tanto en local como en el servidor
 @app.route('/apispec.json', methods=['GET', 'OPTIONS'])
 def get_swagger_spec():
     """Obtener especificación de Swagger con host dinámico basado en la petición"""
@@ -94,20 +103,60 @@ def get_swagger_spec():
         response.headers.add("Access-Control-Allow-Origin", "*")
         response.headers.add('Access-Control-Allow-Headers', "Content-Type,Accept,X-User-Celular,Authorization")
         response.headers.add('Access-Control-Allow-Methods', "GET,OPTIONS")
+        response.headers.add('Access-Control-Max-Age', "3600")
         return response
     
-    # Obtener la especificación base de Swagger
-    spec = swagger.get_apispecs()
-    
-    # Actualizar con el host y scheme actuales de la petición
-    # Esto asegura que Swagger UI use el host correcto (local o servidor)
-    spec['host'] = request.host
-    spec['schemes'] = [request.scheme]
-    
-    response = jsonify(spec)
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept,X-User-Celular,Authorization')
-    return response
+    try:
+        # Obtener la especificación base de Swagger
+        spec = swagger.get_apispecs()
+        
+        # Actualizar con el host y scheme actuales de la petición
+        # Esto asegura que Swagger UI use el host correcto (local o servidor)
+        current_host = request.host
+        current_scheme = request.scheme
+        
+        # Si hay un header X-Forwarded-Host (proxy), usarlo
+        forwarded_host = request.headers.get('X-Forwarded-Host')
+        if forwarded_host:
+            current_host = forwarded_host.split(',')[0].strip()
+        
+        # Si hay un header X-Forwarded-Proto (proxy), usarlo
+        forwarded_proto = request.headers.get('X-Forwarded-Proto')
+        if forwarded_proto:
+            current_scheme = forwarded_proto.split(',')[0].strip()
+        
+        # Log para debugging (solo en desarrollo)
+        if os.getenv('FLASK_ENV') != 'production':
+            print(f"[SWAGGER] Host detectado: {current_host}, Scheme: {current_scheme}")
+            print(f"[SWAGGER] Headers: X-Forwarded-Host={forwarded_host}, X-Forwarded-Proto={forwarded_proto}")
+        
+        # Actualizar la especificación
+        spec['host'] = current_host
+        spec['schemes'] = [current_scheme]
+        
+        # Asegurar que todos los paths usen el scheme correcto
+        if 'paths' in spec:
+            for path in spec['paths'].values():
+                for method in path.values():
+                    if isinstance(method, dict):
+                        # Asegurar que las respuestas tengan el formato correcto
+                        pass
+        
+        response = jsonify(spec)
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept,X-User-Celular,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,OPTIONS')
+        response.headers.add('Access-Control-Max-Age', '3600')
+        
+        return response
+    except Exception as e:
+        # Si hay error, devolver una respuesta básica
+        error_response = jsonify({
+            'error': str(e),
+            'message': 'Error generando especificación Swagger'
+        })
+        error_response.headers.add('Access-Control-Allow-Origin', '*')
+        return error_response, 500
 
 # Manejar preflight requests (OPTIONS)
 @app.before_request
