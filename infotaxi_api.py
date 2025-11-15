@@ -18,7 +18,13 @@ import os
 from functools import wraps
 
 app = Flask(__name__)
-CORS(app)
+# Configurar CORS para permitir todas las solicitudes (necesario para Swagger UI)
+CORS(app, resources={
+    r"/api/*": {"origins": "*"},
+    r"/apidocs/*": {"origins": "*"},
+    r"/apispec.json": {"origins": "*"},
+    r"/flasgger_static/*": {"origins": "*"}
+})
 
 # Configurar Swagger
 swagger_config = {
@@ -151,7 +157,14 @@ def verificar_usuario_existe():
       500:
         description: Error del servidor
     """
-    data = request.get_json()
+    try:
+        data = request.get_json() or {}
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'Error al procesar el JSON: ' + str(e)
+        }), 400
+    
     celular = data.get('celular')
     
     if not celular:
@@ -702,6 +715,15 @@ def editar_persona(id):
         if conn.is_connected():
             cursor.close()
             conn.close()
+
+# ==================== MANEJAR OPTIONS PARA CORS ====================
+@app.after_request
+def after_request(response):
+    """Agregar headers CORS a todas las respuestas"""
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-User-Celular')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # ==================== RUTA DE PRUEBA ====================
 @app.route('/api/health', methods=['GET'])
