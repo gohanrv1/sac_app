@@ -27,9 +27,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt /app/requirements.txt
 
 # Instalar dependencias Python
-RUN pip install --no-cache-dir --upgrade pip && \
+# Esto instala TODO automáticamente desde requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir gunicorn
+    echo "✅ Todas las dependencias instaladas correctamente" && \
+    pip list
 
 # Copiar el proyecto completo
 COPY . .

@@ -10,5 +10,5 @@ openpyxl>=3.1.0
 # Para manejar .env si lo requieres
 python-dotenv>=1.0.1
 
-# Servidor WSGI para producción (se instala en Dockerfile)
-# gunicorn>=21.2.0
+# Servidor WSGI para producción
+gunicorn>=21.2.0
