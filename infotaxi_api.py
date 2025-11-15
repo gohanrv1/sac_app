@@ -85,39 +85,14 @@ swagger_template = {
 # Inicializar Swagger con configuración dinámica
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
-# Sobrescribir el endpoint de apispec.json para usar el host dinámico
-@app.route('/apispec.json', methods=['GET', 'OPTIONS'])
-def get_swagger_spec():
-    """Obtener especificación de Swagger con host dinámico"""
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Accept")
-        response.headers.add('Access-Control-Allow-Methods', "GET,OPTIONS")
-        return response
-    
-    # Obtener la especificación base de Swagger
-    spec = swagger.get_apispecs()
-    
-    # Actualizar con el host y scheme actuales de la petición
-    spec['host'] = request.host
-    spec['schemes'] = [request.scheme]
-    
-    response = jsonify(spec)
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Accept')
-    return response
-
-# Manejar preflight requests (OPTIONS) - debe estar antes de otros before_request
+# Manejar preflight requests (OPTIONS)
 @app.before_request
 def handle_preflight():
-    """Manejar solicitudes OPTIONS (preflight CORS)"""
     if request.method == "OPTIONS":
         response = jsonify({'status': 'ok'})
         response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization,Accept")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization")
         response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
-        response.headers.add('Access-Control-Max-Age', "3600")
         return response
 
 # Manejar preflight requests
