@@ -1306,11 +1306,24 @@ def index():
 
 # ==================== INICIAR SERVIDOR ====================
 if __name__ == '__main__':
+    import os
+    # Detectar si estamos en producción (Docker) o desarrollo
+    is_production = os.getenv('FLASK_ENV') == 'production' or os.getenv('DOCKER_ENV') == 'true'
+    
     print("=" * 60)
     print("🚕 API InfoTaxi iniciando...")
     print("=" * 60)
-    print(f"📡 Servidor: http://localhost:5000")
-    print(f"📚 Documentación Swagger: http://localhost:5000/apidocs/")
-    print(f"🔍 Health Check: http://localhost:5000/api/health")
+    print(f"📡 Servidor: http://0.0.0.0:5000")
+    print(f"📚 Documentación Swagger: http://0.0.0.0:5000/apidocs/")
+    print(f"🔍 Health Check: http://0.0.0.0:5000/api/health")
+    print(f"🔧 Modo: {'Producción' if is_production else 'Desarrollo'}")
     print("=" * 60)
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    # En producción usar host 0.0.0.0, en desarrollo localhost
+    # debug solo en desarrollo
+    app.run(
+        debug=not is_production,
+        host='0.0.0.0',
+        port=int(os.getenv('PORT', 5000)),
+        threaded=True
+    )

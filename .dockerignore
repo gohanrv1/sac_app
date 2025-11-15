@@ -7,8 +7,15 @@ env/
 venv/
 .venv
 *.md
+!README.md
 .env
 .git
 .gitignore
 *.log
-
+test_*.py
+instalar_dependencias.py
+iniciar_y_probar.ps1
+*.ps1
+.DS_Store
+.vscode/
+.idea/

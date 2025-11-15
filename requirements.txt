@@ -1,11 +1,14 @@
-Flask==3.0.2
-flask-cors==4.0.1
-mysql-connector-python==8.3.0
-Flasgger==0.9.7.1
+Flask>=3.0.0
+flask-cors>=4.0.0
+mysql-connector-python>=8.3.0
+Flasgger>=0.9.7
 
 # Utilidades (si usas Excel u otros procesos)
-pandas==2.2.2
-openpyxl==3.1.2
+pandas>=2.0.0
+openpyxl>=3.1.0
 
 # Para manejar .env si lo requieres
-python-dotenv==1.0.1
+python-dotenv>=1.0.1
+
+# Servidor WSGI para producción (se instala en Dockerfile)
+# gunicorn>=21.2.0
