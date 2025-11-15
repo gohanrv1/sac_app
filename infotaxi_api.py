@@ -17,7 +17,15 @@ import io
 from functools import wraps
 
 app = Flask(__name__)
-CORS(app)
+
+# Configurar CORS de manera más permisiva
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "X-User-Celular", "Authorization"]
+    }
+})
 
 # ==================== CONFIGURACIÓN SWAGGER ====================
 swagger_config = {
@@ -48,7 +56,7 @@ swagger_template = {
     },
     "host": "localhost:5000",
     "basePath": "/",
-    "schemes": ["http", "https"],
+    "schemes": ["http"],
     "securityDefinitions": {
         "CelularAuth": {
             "type": "apiKey",
@@ -56,10 +64,20 @@ swagger_template = {
             "in": "header",
             "description": "Número de celular del usuario autenticado"
         }
-    }
+    },
+    "consumes": ["application/json"],
+    "produces": ["application/json"]
 }
 
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
+
+# Manejar preflight requests
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-User-Celular,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # ==================== CONFIGURACIÓN BASE DE DATOS ====================
 DB_CONFIG = {
