@@ -504,6 +504,8 @@ def crear_usuario():
                     'message': 'Ya existe un usuario con ese celular o email'
                 })
                 response.headers.add('Access-Control-Allow-Origin', '*')
+                response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-User-Celular,Authorization,Accept')
+                response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
                 return response, 409
             
             # Validar que los campos no estén vacíos
@@ -543,6 +545,9 @@ def crear_usuario():
                 'id_user': user_id
             })
             response.headers.add('Access-Control-Allow-Origin', '*')
+            response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-User-Celular,Authorization,Accept')
+            response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+            response.headers.add('Access-Control-Max-Age', '3600')
             return response, 201
             
         except Error as e:
@@ -1327,8 +1332,9 @@ def health_check():
     if request.method == 'OPTIONS':
         response = jsonify({'status': 'ok'})
         response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization,Accept")
         response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        response.headers.add('Access-Control-Max-Age', "3600")
         return response
     
     try:
@@ -1345,6 +1351,9 @@ def health_check():
             'swagger_docs': '/apidocs/'
         })
         response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-User-Celular,Authorization,Accept')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Max-Age', '3600')
         return response, 200
     except Exception as e:
         response = jsonify({
@@ -1352,6 +1361,8 @@ def health_check():
             'message': f'Error en health check: {str(e)}'
         })
         response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-User-Celular,Authorization,Accept')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response, 500
 
 # ==================== RUTA PRINCIPAL ====================
