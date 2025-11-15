@@ -71,6 +71,16 @@ swagger_template = {
 
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
+# Manejar preflight requests (OPTIONS)
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = jsonify({'status': 'ok'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        return response
+
 # Manejar preflight requests
 @app.after_request
 def after_request(response):
@@ -78,6 +88,26 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,X-User-Celular,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
+
+# Manejar errores globales
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Manejar todas las excepciones no capturadas"""
+    print(f"Error no manejado: {str(e)}")
+    import traceback
+    traceback.print_exc()
+    return jsonify({
+        'success': False,
+        'message': f'Error del servidor: {str(e)}'
+    }), 500
+
+@app.errorhandler(400)
+def handle_bad_request(e):
+    """Manejar errores de solicitud incorrecta"""
+    return jsonify({
+        'success': False,
+        'message': 'Solicitud incorrecta: ' + str(e)
+    }), 400
 
 # ==================== CONFIGURACIÓN BASE DE DATOS ====================
 DB_CONFIG = {
@@ -190,7 +220,20 @@ def verificar_usuario_existe():
       500:
         description: Error del servidor
     """
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'Error al procesar JSON: ' + str(e)
+        }), 400
+    
+    if not data:
+        return jsonify({
+            'success': False,
+            'message': 'No se recibió ningún dato JSON'
+        }), 400
+    
     celular = data.get('celular')
     
     if not celular:
@@ -294,7 +337,19 @@ def crear_usuario():
       500:
         description: Error del servidor
     """
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'Error al procesar JSON: ' + str(e)
+        }), 400
+    
+    if not data:
+        return jsonify({
+            'success': False,
+            'message': 'No se recibió ningún dato JSON'
+        }), 400
     
     required = ['username', 'nombres', 'celular', 'password']
     if not all(field in data for field in required):
@@ -305,11 +360,12 @@ def crear_usuario():
     
     conn = get_db_connection()
     if not conn:
-        return jsonify({'success': False, 'message': 'Error de conexión'}), 500
+        return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'}), 500
     
     try:
         cursor = conn.cursor()
         
+        # Verificar si el usuario ya existe
         cursor.execute("SELECT id_user FROM users WHERE Celular = %s OR username = %s",
                       (data['celular'], data['username']))
         if cursor.fetchone():
@@ -318,8 +374,17 @@ def crear_usuario():
                 'message': 'Ya existe un usuario con ese celular o email'
             }), 409
         
+        # Validar que los campos no estén vacíos
+        if not data['username'] or not data['nombres'] or not data['celular'] or not data['password']:
+            return jsonify({
+                'success': False,
+                'message': 'Todos los campos son requeridos y no pueden estar vacíos'
+            }), 400
+        
+        # Hash de la contraseña
         password_hash = hashlib.sha1(data['password'].encode()).hexdigest()
         
+        # Insertar nuevo usuario
         query = """
             INSERT INTO users (username, nombres, Celular, rol, password, isactive)
             VALUES (%s, %s, %s, 'usuario', %s, 1)
@@ -339,10 +404,21 @@ def crear_usuario():
         }), 201
         
     except Error as e:
-        conn.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
-    finally:
         if conn.is_connected():
+            conn.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error de base de datos: {str(e)}'
+        }), 500
+    except Exception as e:
+        if conn.is_connected():
+            conn.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error inesperado: {str(e)}'
+        }), 500
+    finally:
+        if conn and conn.is_connected():
             cursor.close()
             conn.close()
 
@@ -781,7 +857,19 @@ def crear_persona():
       500:
         description: Error del servidor
     """
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'Error al procesar JSON: ' + str(e)
+        }), 400
+    
+    if not data:
+        return jsonify({
+            'success': False,
+            'message': 'No se recibió ningún dato JSON'
+        }), 400
     
     required = ['numero_documento', 'nombres', 'apellidos', 'placa']
     if not all(field in data for field in required):
@@ -890,7 +978,13 @@ def editar_persona(id):
       500:
         description: Error del servidor
     """
-    data = request.get_json()
+    try:
+        data = request.get_json(force=True) or {}
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': 'Error al procesar JSON: ' + str(e)
+        }), 400
     
     conn = get_db_connection()
     if not conn:
