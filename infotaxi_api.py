@@ -21,29 +21,18 @@ app = Flask(__name__)
 
 # Configurar CORS de manera más permisiva
 # Importante: Incluir todos los headers que Swagger UI necesita
-CORS(app, resources={
-    r"/api/*": {
-        "origins": "*",
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "X-User-Celular", "Authorization", "Accept"],
-        "supports_credentials": False
-    },
-    r"/apidocs/*": {
-        "origins": "*",
-        "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Accept"]
-    },
-    r"/apispec.json": {
-        "origins": "*",
-        "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Accept"]
-    },
-    r"/flasgger_static/*": {
-        "origins": "*",
-        "methods": ["GET", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    }
-})
+# Configuración global de CORS para todas las rutas
+CORS(app, 
+     resources={
+         r"/*": {
+             "origins": "*",
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "X-User-Celular", "Authorization", "Accept"],
+             "supports_credentials": False,
+             "max_age": 3600
+         }
+     },
+     supports_credentials=False)
 
 # ==================== CONFIGURACIÓN SWAGGER ====================
 swagger_config = {
@@ -125,10 +114,20 @@ def get_swagger_spec():
         if forwarded_proto:
             current_scheme = forwarded_proto.split(',')[0].strip()
         
-        # Log para debugging (solo en desarrollo)
-        if os.getenv('FLASK_ENV') != 'production':
-            print(f"[SWAGGER] Host detectado: {current_host}, Scheme: {current_scheme}")
-            print(f"[SWAGGER] Headers: X-Forwarded-Host={forwarded_host}, X-Forwarded-Proto={forwarded_proto}")
+        # Si el host contiene el dominio de Easypanel, asegurar que no tenga puerto
+        # (Easypanel maneja el puerto internamente)
+        if 'easypanel.host' in current_host or 'fxtfoe.easypanel.host' in current_host:
+            # Remover el puerto si está presente (Easypanel no lo necesita)
+            if ':' in current_host:
+                host_parts = current_host.split(':')
+                current_host = host_parts[0]
+            # Forzar HTTPS si es Easypanel (generalmente usan HTTPS)
+            if current_scheme == 'http' and 'easypanel' in current_host:
+                current_scheme = 'https'
+        
+        # Log para debugging
+        print(f"[SWAGGER] Host detectado: {current_host}, Scheme: {current_scheme}")
+        print(f"[SWAGGER] Request host: {request.host}, Headers: X-Forwarded-Host={forwarded_host}, X-Forwarded-Proto={forwarded_proto}")
         
         # Actualizar la especificación
         spec['host'] = current_host
