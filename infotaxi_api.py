@@ -93,13 +93,15 @@ def after_request(response):
 @app.errorhandler(Exception)
 def handle_exception(e):
     """Manejar todas las excepciones no capturadas"""
-    print(f"Error no manejado: {str(e)}")
+    print(f"[ERROR GLOBAL] Error no manejado: {str(e)}")
     import traceback
     traceback.print_exc()
-    return jsonify({
+    response = jsonify({
         'success': False,
         'message': f'Error del servidor: {str(e)}'
-    }), 500
+    })
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    return response, 500
 
 @app.errorhandler(400)
 def handle_bad_request(e):
@@ -283,7 +285,7 @@ def verificar_usuario_existe():
             conn.close()
 
 # ==================== SERVICIO 2: CREAR USUARIO ====================
-@app.route('/api/usuarios', methods=['POST'])
+@app.route('/api/usuarios', methods=['POST', 'OPTIONS'])
 def crear_usuario():
     """
     Crear nuevo usuario con rol 'usuario'
@@ -337,38 +339,66 @@ def crear_usuario():
       500:
         description: Error del servidor
     """
+    print(f"[DEBUG] POST /api/usuarios - Método: {request.method}")
+    print(f"[DEBUG] Headers: {dict(request.headers)}")
+    print(f"[DEBUG] Content-Type: {request.content_type}")
+    
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization")
+        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        return response
+    
     try:
+        print(f"[DEBUG] Intentando obtener JSON...")
         data = request.get_json(force=True)
+        print(f"[DEBUG] JSON recibido: {data}")
     except Exception as e:
+        print(f"[ERROR] Error al procesar JSON: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'success': False,
             'message': 'Error al procesar JSON: ' + str(e)
         }), 400
     
     if not data:
+        print("[ERROR] No se recibió ningún dato JSON")
         return jsonify({
             'success': False,
             'message': 'No se recibió ningún dato JSON'
         }), 400
     
+    print(f"[DEBUG] Validando campos requeridos...")
     required = ['username', 'nombres', 'celular', 'password']
     if not all(field in data for field in required):
+        missing = [field for field in required if field not in data]
+        print(f"[ERROR] Campos faltantes: {missing}")
         return jsonify({
             'success': False,
-            'message': 'Campos requeridos: username, nombres, celular, password'
+            'message': f'Campos requeridos faltantes: {", ".join(missing)}'
         }), 400
     
+    print(f"[DEBUG] Conectando a la base de datos...")
     conn = get_db_connection()
     if not conn:
+        print("[ERROR] No se pudo conectar a la base de datos")
         return jsonify({'success': False, 'message': 'Error de conexión a la base de datos'}), 500
     
+    print(f"[DEBUG] Conexión a BD exitosa")
+    
     try:
+        print(f"[DEBUG] Creando cursor...")
         cursor = conn.cursor()
         
         # Verificar si el usuario ya existe
+        print(f"[DEBUG] Verificando si el usuario ya existe...")
         cursor.execute("SELECT id_user FROM users WHERE Celular = %s OR username = %s",
                       (data['celular'], data['username']))
-        if cursor.fetchone():
+        existing = cursor.fetchone()
+        if existing:
+            print(f"[WARN] Usuario ya existe: {existing}")
             return jsonify({
                 'success': False,
                 'message': 'Ya existe un usuario con ese celular o email'
@@ -376,15 +406,18 @@ def crear_usuario():
         
         # Validar que los campos no estén vacíos
         if not data['username'] or not data['nombres'] or not data['celular'] or not data['password']:
+            print(f"[ERROR] Campos vacíos detectados")
             return jsonify({
                 'success': False,
                 'message': 'Todos los campos son requeridos y no pueden estar vacíos'
             }), 400
         
         # Hash de la contraseña
+        print(f"[DEBUG] Generando hash de contraseña...")
         password_hash = hashlib.sha1(data['password'].encode()).hexdigest()
         
         # Insertar nuevo usuario
+        print(f"[DEBUG] Insertando nuevo usuario...")
         query = """
             INSERT INTO users (username, nombres, Celular, rol, password, isactive)
             VALUES (%s, %s, %s, 'usuario', %s, 1)
@@ -397,30 +430,46 @@ def crear_usuario():
         ))
         conn.commit()
         
-        return jsonify({
+        user_id = cursor.lastrowid
+        print(f"[SUCCESS] Usuario creado exitosamente con ID: {user_id}")
+        
+        response = jsonify({
             'success': True,
             'message': 'Usuario creado exitosamente',
-            'id_user': cursor.lastrowid
-        }), 201
+            'id_user': user_id
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 201
         
     except Error as e:
-        if conn.is_connected():
+        print(f"[ERROR] Error de base de datos: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        if conn and conn.is_connected():
             conn.rollback()
-        return jsonify({
+        response = jsonify({
             'success': False,
             'message': f'Error de base de datos: {str(e)}'
-        }), 500
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 500
     except Exception as e:
-        if conn.is_connected():
+        print(f"[ERROR] Error inesperado: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        if conn and conn.is_connected():
             conn.rollback()
-        return jsonify({
+        response = jsonify({
             'success': False,
             'message': f'Error inesperado: {str(e)}'
-        }), 500
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 500
     finally:
         if conn and conn.is_connected():
             cursor.close()
             conn.close()
+            print(f"[DEBUG] Conexión cerrada")
 
 # ==================== SERVICIO 3: CONSULTAR PERSONA POR CÉDULA ====================
 @app.route('/api/personas/<cedula>', methods=['GET'])
