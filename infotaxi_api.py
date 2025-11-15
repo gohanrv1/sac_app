@@ -82,11 +82,62 @@ swagger_template = {
 # Inicializar Swagger con configuración dinámica
 swagger = Swagger(app, config=swagger_config, template=swagger_template)
 
-# Sobrescribir el endpoint de apispec.json para usar el host dinámico del servidor
-# Esto es crítico para que Swagger UI funcione tanto en local como en el servidor
-@app.route('/apispec.json', methods=['GET', 'OPTIONS'])
+# CRÍTICO: Usar after_request para interceptar y modificar la respuesta de /apispec.json
+# Esto asegura que siempre agreguemos el campo 'host' incluso si Flasgger no lo incluye
+@app.after_request
+def add_host_to_swagger_spec(response):
+    """Interceptar respuesta de /apispec.json y agregar el campo 'host' si falta"""
+    if request.path == '/apispec.json' and response.status_code == 200:
+        try:
+            # Obtener el JSON de la respuesta
+            import json
+            data = response.get_json()
+            
+            if data and isinstance(data, dict):
+                # Detectar host y scheme
+                current_host = request.host
+                current_scheme = request.scheme
+                
+                # Si hay un header X-Forwarded-Host (proxy), usarlo
+                forwarded_host = request.headers.get('X-Forwarded-Host')
+                if forwarded_host:
+                    current_host = forwarded_host.split(',')[0].strip()
+                
+                # Si hay un header X-Forwarded-Proto (proxy), usarlo
+                forwarded_proto = request.headers.get('X-Forwarded-Proto')
+                if forwarded_proto:
+                    current_scheme = forwarded_proto.split(',')[0].strip()
+                
+                # Si el host contiene el dominio de Easypanel, asegurar que no tenga puerto
+                if 'easypanel.host' in current_host or 'fxtfoe.easypanel.host' in current_host:
+                    if ':' in current_host:
+                        host_parts = current_host.split(':')
+                        current_host = host_parts[0]
+                    if current_scheme == 'http' and 'easypanel' in current_host:
+                        current_scheme = 'https'
+                
+                # FORZAR el host siempre - esto es crítico para Swagger UI
+                data['host'] = current_host
+                data['schemes'] = [current_scheme]
+                
+                print(f"[SWAGGER] Host agregado: {data['host']}, Scheme: {data['schemes']}")
+                
+                # Actualizar la respuesta
+                response.data = json.dumps(data).encode('utf-8')
+                response.headers['Content-Type'] = 'application/json'
+        except Exception as e:
+            print(f"[SWAGGER ERROR] Error agregando host: {str(e)}")
+            import traceback
+            traceback.print_exc()
+    
+    return response
+
+# También registrar el endpoint directamente por si acaso
+@app.route('/apispec.json', methods=['GET', 'OPTIONS'], endpoint='custom_swagger_spec')
 def get_swagger_spec():
     """Obtener especificación de Swagger con host dinámico basado en la petición"""
+    print(f"[SWAGGER] Endpoint personalizado llamado - Método: {request.method}")
+    
     if request.method == 'OPTIONS':
         response = jsonify({'status': 'ok'})
         response.headers.add("Access-Control-Allow-Origin", "*")
@@ -98,9 +149,9 @@ def get_swagger_spec():
     try:
         # Obtener la especificación base de Swagger
         spec = swagger.get_apispecs()
+        print(f"[SWAGGER] Especificación obtenida, tiene host: {'host' in spec}")
         
         # Actualizar con el host y scheme actuales de la petición
-        # Esto asegura que Swagger UI use el host correcto (local o servidor)
         current_host = request.host
         current_scheme = request.scheme
         
@@ -115,31 +166,19 @@ def get_swagger_spec():
             current_scheme = forwarded_proto.split(',')[0].strip()
         
         # Si el host contiene el dominio de Easypanel, asegurar que no tenga puerto
-        # (Easypanel maneja el puerto internamente)
         if 'easypanel.host' in current_host or 'fxtfoe.easypanel.host' in current_host:
-            # Remover el puerto si está presente (Easypanel no lo necesita)
             if ':' in current_host:
                 host_parts = current_host.split(':')
                 current_host = host_parts[0]
-            # Forzar HTTPS si es Easypanel (generalmente usan HTTPS)
             if current_scheme == 'http' and 'easypanel' in current_host:
                 current_scheme = 'https'
         
-        # Log para debugging
-        print(f"[SWAGGER] Host detectado: {current_host}, Scheme: {current_scheme}")
-        print(f"[SWAGGER] Request host: {request.host}, Headers: X-Forwarded-Host={forwarded_host}, X-Forwarded-Proto={forwarded_proto}")
-        
-        # Actualizar la especificación
+        # FORZAR el host siempre - esto es crítico
         spec['host'] = current_host
         spec['schemes'] = [current_scheme]
         
-        # Asegurar que todos los paths usen el scheme correcto
-        if 'paths' in spec:
-            for path in spec['paths'].values():
-                for method in path.values():
-                    if isinstance(method, dict):
-                        # Asegurar que las respuestas tengan el formato correcto
-                        pass
+        print(f"[SWAGGER] Host final: {spec['host']}, Scheme: {spec['schemes']}")
+        print(f"[SWAGGER] Verificación - host en spec: {'host' in spec}, valor: {spec.get('host')}")
         
         response = jsonify(spec)
         response.headers.add('Access-Control-Allow-Origin', '*')
@@ -149,10 +188,13 @@ def get_swagger_spec():
         
         return response
     except Exception as e:
-        # Si hay error, devolver una respuesta básica
+        print(f"[SWAGGER ERROR] {str(e)}")
+        import traceback
+        traceback.print_exc()
         error_response = jsonify({
             'error': str(e),
-            'message': 'Error generando especificación Swagger'
+            'message': 'Error generando especificación Swagger',
+            'host': request.host
         })
         error_response.headers.add('Access-Control-Allow-Origin', '*')
         return error_response, 500
