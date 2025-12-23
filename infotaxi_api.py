@@ -1268,6 +1268,254 @@ def editar_persona(id):
             cursor.close()
             conn.close()
 
+# ==================== SERVICIO 8: OBTENER ESTADO DE CONVERSACIÓN ====================
+@app.route('/api/estado-usuario/<celular>', methods=['GET'])
+def obtener_estado_usuario(celular):
+    """
+    Obtener el estado actual de conversación de un usuario
+    ---
+    tags:
+      - Estado de Conversación
+    parameters:
+      - name: celular
+        in: path
+        type: string
+        required: true
+        description: Número de celular del usuario
+        example: "3007471199"
+    responses:
+      200:
+        description: Estado encontrado o no encontrado
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            exists:
+              type: boolean
+            estado:
+              type: object
+              properties:
+                celular:
+                  type: string
+                estado:
+                  type: string
+                opcion:
+                  type: integer
+                updated_at:
+                  type: string
+      500:
+        description: Error del servidor
+    """
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({
+            'success': False,
+            'message': 'Error conectando a la base de datos'
+        }), 500
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT celular, estado, opcion, updated_at
+            FROM user_state
+            WHERE celular = %s
+        """, (celular,))
+        
+        estado = cursor.fetchone()
+        
+        if estado:
+            return jsonify({
+                'success': True,
+                'exists': True,
+                'estado': {
+                    'celular': estado['celular'],
+                    'estado': estado['estado'],
+                    'opcion': estado['opcion'],
+                    'updated_at': estado['updated_at'].isoformat() if estado['updated_at'] else None
+                }
+            }), 200
+        else:
+            return jsonify({
+                'success': True,
+                'exists': False,
+                'estado': None
+            }), 200
+    
+    except Error as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error consultando estado: {str(e)}'
+        }), 500
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+# ==================== SERVICIO 9: GUARDAR ESTADO DE CONVERSACIÓN ====================
+@app.route('/api/estado-usuario', methods=['POST'])
+def guardar_estado_usuario():
+    """
+    Guardar o actualizar el estado de conversación de un usuario
+    ---
+    tags:
+      - Estado de Conversación
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - celular
+            - estado
+          properties:
+            celular:
+              type: string
+              example: "3007471199"
+            estado:
+              type: string
+              example: "esperando_cedula"
+            opcion:
+              type: integer
+              example: 1
+    responses:
+      200:
+        description: Estado guardado exitosamente
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+      400:
+        description: Parámetros incorrectos
+      500:
+        description: Error del servidor
+    """
+    try:
+        data = request.get_json(force=True)
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error parseando JSON: {str(e)}'
+        }), 400
+    
+    if not data:
+        return jsonify({
+            'success': False,
+            'message': 'Cuerpo de la solicitud vacío'
+        }), 400
+    
+    celular = data.get('celular')
+    estado = data.get('estado')
+    opcion = data.get('opcion')
+    
+    if not celular or not estado:
+        return jsonify({
+            'success': False,
+            'message': 'Faltan campos requeridos: celular y estado'
+        }), 400
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({
+            'success': False,
+            'message': 'Error conectando a la base de datos'
+        }), 500
+    
+    try:
+        cursor = conn.cursor()
+        
+        # Usar INSERT ... ON DUPLICATE KEY UPDATE para insertar o actualizar
+        cursor.execute("""
+            INSERT INTO user_state (celular, estado, opcion, updated_at)
+            VALUES (%s, %s, %s, NOW())
+            ON DUPLICATE KEY UPDATE
+                estado = VALUES(estado),
+                opcion = VALUES(opcion),
+                updated_at = NOW()
+        """, (celular, estado, opcion))
+        
+        conn.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Estado guardado exitosamente'
+        }), 200
+    
+    except Error as e:
+        conn.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error guardando estado: {str(e)}'
+        }), 500
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+# ==================== SERVICIO 10: ELIMINAR ESTADO DE CONVERSACIÓN ====================
+@app.route('/api/estado-usuario/<celular>', methods=['DELETE'])
+def eliminar_estado_usuario(celular):
+    """
+    Eliminar el estado de conversación de un usuario (limpiar estado)
+    ---
+    tags:
+      - Estado de Conversación
+    parameters:
+      - name: celular
+        in: path
+        type: string
+        required: true
+        description: Número de celular del usuario
+        example: "3007471199"
+    responses:
+      200:
+        description: Estado eliminado exitosamente
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+      500:
+        description: Error del servidor
+    """
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({
+            'success': False,
+            'message': 'Error conectando a la base de datos'
+        }), 500
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            DELETE FROM user_state
+            WHERE celular = %s
+        """, (celular,))
+        
+        conn.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Estado eliminado exitosamente'
+        }), 200
+    
+    except Error as e:
+        conn.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error eliminando estado: {str(e)}'
+        }), 500
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
 # ==================== SERVICIO EXTRA: ESTADÍSTICAS DE USUARIO ====================
 @app.route('/api/estadisticas', methods=['GET'])
 @verificar_usuario
