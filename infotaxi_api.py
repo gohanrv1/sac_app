@@ -566,8 +566,8 @@ def crear_usuario():
             # Insertar nuevo usuario
             print(f"[DEBUG] Insertando nuevo usuario...")
             query = """
-                INSERT INTO users (username, nombres, Celular, rol, password, isactive)
-                VALUES (%s, %s, %s, 'usuario', %s, 1)
+                INSERT INTO users (username, nombres, Celular, rol, password, isactive, ultima_cone)
+                VALUES (%s, %s, %s, 'usuario', %s, 1, NOW())
             """
             cursor.execute(query, (
                 data['username'],
