@@ -1516,6 +1516,104 @@ def eliminar_estado_usuario(celular):
             cursor.close()
             conn.close()
 
+# ==================== SERVICIO 11: BLOQUEAR/DESBLOQUEAR USUARIO ====================
+@app.route('/api/usuarios/<celular>/bloquear', methods=['PUT'])
+def bloquear_usuario(celular):
+    """
+    Bloquear o desbloquear un usuario por celular
+    ---
+    tags:
+      - Usuarios
+    parameters:
+      - name: celular
+        in: path
+        type: string
+        required: true
+        description: Número de celular del usuario a bloquear
+        example: "3001234567"
+      - name: body
+        in: body
+        required: false
+        schema:
+          type: object
+          properties:
+            bloquear:
+              type: boolean
+              example: true
+              description: true para bloquear, false para desbloquear (por defecto true)
+    responses:
+      200:
+        description: Usuario bloqueado/desbloqueado exitosamente
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+      404:
+        description: Usuario no encontrado
+      500:
+        description: Error del servidor
+    """
+    try:
+        data = request.get_json(force=True) or {}
+        bloquear = data.get('bloquear', True)  # Por defecto bloquear
+    except Exception:
+        bloquear = True
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({
+            'success': False,
+            'message': 'Error conectando a la base de datos'
+        }), 500
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        
+        # Verificar si el usuario existe
+        cursor.execute("""
+            SELECT id_user, username, isactive 
+            FROM users 
+            WHERE Celular = %s
+        """, (celular,))
+        
+        usuario = cursor.fetchone()
+        
+        if not usuario:
+            return jsonify({
+                'success': False,
+                'message': f'Usuario con celular {celular} no encontrado'
+            }), 404
+        
+        # Actualizar el estado isactive
+        nuevo_estado = 0 if bloquear else 1
+        cursor.execute("""
+            UPDATE users 
+            SET isactive = %s 
+            WHERE Celular = %s
+        """, (nuevo_estado, celular))
+        
+        conn.commit()
+        
+        accion = 'bloqueado' if bloquear else 'desbloqueado'
+        return jsonify({
+            'success': True,
+            'message': f'Usuario {usuario["username"]} {accion} exitosamente'
+        }), 200
+    
+    except Error as e:
+        conn.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error al bloquear usuario: {str(e)}'
+        }), 500
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
 # ==================== SERVICIO EXTRA: ESTADÍSTICAS DE USUARIO ====================
 @app.route('/api/estadisticas', methods=['GET'])
 @verificar_usuario
