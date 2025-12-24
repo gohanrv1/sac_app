@@ -1840,6 +1840,317 @@ def health_check():
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response, 500
 
+# ==================== ENDPOINT: DESCARGAR PLANTILLA EXCEL ====================
+@app.route('/api/plantilla-excel', methods=['GET', 'OPTIONS'])
+def descargar_plantilla_excel():
+    """
+    Descarga plantilla Excel para carga masiva de reportes
+    ---
+    tags:
+      - Excel
+    parameters:
+      - name: X-User-Celular
+        in: header
+        type: string
+        required: false
+        description: Celular del usuario solicitante
+    responses:
+      200:
+        description: Archivo Excel descargado exitosamente
+        schema:
+          type: file
+      500:
+        description: Error al generar la plantilla
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+    """
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization,Accept")
+        response.headers.add('Access-Control-Allow-Methods', "GET,OPTIONS")
+        return response
+    
+    try:
+        # Crear un nuevo workbook con openpyxl
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Plantilla Reportes"
+        
+        # Definir los headers
+        headers = [
+            'Numero_Documento',
+            'Nombres', 
+            'Apellidos',
+            'Placa',
+            'Valor_Reporte',
+            'Descripcion_Reporte'
+        ]
+        
+        # Estilo para el header
+        header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True, size=12)
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Escribir headers en la primera fila
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+        
+        # Ajustar ancho de columnas
+        ws.column_dimensions['A'].width = 18  # Numero_Documento
+        ws.column_dimensions['B'].width = 25  # Nombres
+        ws.column_dimensions['C'].width = 25  # Apellidos
+        ws.column_dimensions['D'].width = 12  # Placa
+        ws.column_dimensions['E'].width = 15  # Valor_Reporte
+        ws.column_dimensions['F'].width = 50  # Descripcion_Reporte
+        
+        # Agregar una fila de ejemplo
+        ws.append([
+            '1234567890',
+            'Juan Carlos',
+            'Pérez García',
+            'ABC123',
+            '50000',
+            'Servicio mal prestado, conductor grosero'
+        ])
+        
+        # Guardar el archivo en memoria
+        excel_file = io.BytesIO()
+        wb.save(excel_file)
+        excel_file.seek(0)
+        
+        # Nombre del archivo con fecha
+        filename = f"plantilla_reportes_{datetime.now().strftime('%Y%m%d')}.xlsx"
+        
+        response = send_file(
+            excel_file,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response
+        
+    except Exception as e:
+        response = jsonify({
+            'success': False,
+            'message': f'Error al generar plantilla: {str(e)}'
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 500
+
+# ==================== ENDPOINT: IMPORTAR EXCEL ====================
+@app.route('/api/importar-excel', methods=['POST', 'OPTIONS'])
+@require_celular
+def importar_excel():
+    """
+    Importa reportes desde archivo Excel
+    ---
+    tags:
+      - Excel
+    consumes:
+      - multipart/form-data
+    parameters:
+      - name: X-User-Celular
+        in: header
+        type: string
+        required: true
+        description: Celular del usuario que importa (debe existir en users)
+      - name: file
+        in: formData
+        type: file
+        required: true
+        description: Archivo Excel con los reportes (.xlsx)
+    responses:
+      200:
+        description: Importación completada
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+            total_filas:
+              type: integer
+            importados:
+              type: integer
+            errores:
+              type: integer
+            detalles:
+              type: array
+              items:
+                type: object
+                properties:
+                  fila:
+                    type: integer
+                  status:
+                    type: string
+                  mensaje:
+                    type: string
+      400:
+        description: Error en la solicitud
+      500:
+        description: Error en el servidor
+    """
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization,Accept")
+        response.headers.add('Access-Control-Allow-Methods', "POST,OPTIONS")
+        return response
+    
+    celular = request.headers.get('X-User-Celular')
+    
+    # Verificar que se envió un archivo
+    if 'file' not in request.files:
+        return jsonify({
+            'success': False,
+            'message': 'No se envió ningún archivo'
+        }), 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({
+            'success': False,
+            'message': 'No se seleccionó ningún archivo'
+        }), 400
+    
+    if not file.filename.endswith('.xlsx'):
+        return jsonify({
+            'success': False,
+            'message': 'El archivo debe ser formato .xlsx'
+        }), 400
+    
+    try:
+        # Leer el archivo Excel
+        df = pd.read_excel(file, engine='openpyxl')
+        
+        # Validar que tenga las columnas requeridas
+        columnas_requeridas = [
+            'Numero_Documento', 'Nombres', 'Apellidos', 
+            'Placa', 'Valor_Reporte', 'Descripcion_Reporte'
+        ]
+        
+        for col in columnas_requeridas:
+            if col not in df.columns:
+                return jsonify({
+                    'success': False,
+                    'message': f'Falta la columna requerida: {col}'
+                }), 400
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({
+                'success': False,
+                'message': 'Error de conexión a la base de datos'
+            }), 500
+        
+        cursor = conn.cursor()
+        
+        # Obtener el id_user del celular
+        cursor.execute("SELECT id_user FROM users WHERE Celular = %s", (celular,))
+        user_result = cursor.fetchone()
+        
+        if not user_result:
+            cursor.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': 'Usuario no encontrado'
+            }), 400
+        
+        id_user = user_result[0]
+        
+        # Procesar cada fila
+        total_filas = len(df)
+        importados = 0
+        errores = 0
+        detalles = []
+        
+        for index, row in df.iterrows():
+            fila_num = index + 2  # +2 porque Excel empieza en 1 y tiene header
+            
+            try:
+                # Validar que los campos requeridos no estén vacíos
+                if pd.isna(row['Numero_Documento']) or pd.isna(row['Nombres']) or pd.isna(row['Apellidos']):
+                    detalles.append({
+                        'fila': fila_num,
+                        'status': 'error',
+                        'mensaje': 'Campos obligatorios vacíos (Documento, Nombres, Apellidos)'
+                    })
+                    errores += 1
+                    continue
+                
+                # Preparar los valores
+                numero_doc = str(row['Numero_Documento']).strip()
+                nombres = str(row['Nombres']).strip()
+                apellidos = str(row['Apellidos']).strip()
+                placa = str(row['Placa']).strip() if not pd.isna(row['Placa']) else ''
+                valor = str(row['Valor_Reporte']).strip() if not pd.isna(row['Valor_Reporte']) else '0'
+                descripcion = str(row['Descripcion_Reporte']).strip() if not pd.isna(row['Descripcion_Reporte']) else ''
+                
+                # Insertar en la base de datos
+                query = """
+                    INSERT INTO personas 
+                    (Fecha_Reporte, Numero_Documento, Nombres, Apellidos, 
+                     Placa, Valor_Reporte, Descripcion_Reporte, 
+                     Vehiculo_afiliado, Estado, Reportante_Nombres)
+                    VALUES (NOW(), %s, %s, %s, %s, %s, %s, 'No', 'Activo', %s)
+                """
+                
+                cursor.execute(query, (
+                    numero_doc, nombres, apellidos, 
+                    placa, valor, descripcion, id_user
+                ))
+                
+                importados += 1
+                detalles.append({
+                    'fila': fila_num,
+                    'status': 'success',
+                    'mensaje': f'Reporte importado: {nombres} {apellidos}'
+                })
+                
+            except Exception as e:
+                errores += 1
+                detalles.append({
+                    'fila': fila_num,
+                    'status': 'error',
+                    'mensaje': f'Error al importar: {str(e)}'
+                })
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        response = jsonify({
+            'success': True,
+            'message': f'Importación completada: {importados} exitosos, {errores} errores',
+            'total_filas': total_filas,
+            'importados': importados,
+            'errores': errores,
+            'detalles': detalles
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error al procesar el archivo: {str(e)}'
+        }), 500
+
 # ==================== RUTA PRINCIPAL ====================
 @app.route('/', methods=['GET'])
 def index():
