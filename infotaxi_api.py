@@ -635,6 +635,94 @@ def crear_usuario():
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response, 500
 
+# ==================== SERVICIO 3A: CONSULTAR MIS REPORTES POR CÉDULA ====================
+@app.route('/api/mis-reportes/<cedula>', methods=['GET'])
+@verificar_usuario
+def consultar_mis_reportes(cedula):
+    """
+    Consultar reportes propios por número de cédula
+    ---
+    tags:
+      - Reportes
+    security:
+      - CelularAuth: []
+    parameters:
+      - name: cedula
+        in: path
+        type: string
+        required: true
+        description: Número de documento de identidad
+        example: "8497643"
+      - name: X-User-Celular
+        in: header
+        type: string
+        required: true
+        description: Número de celular del usuario autenticado
+        example: "3007471199"
+    responses:
+      200:
+        description: Resultados de la búsqueda
+      401:
+        description: No autorizado
+      500:
+        description: Error del servidor
+    """
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'success': False, 'message': 'Error de conexión'}), 500
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        
+        # Buscar solo reportes creados por este usuario
+        cursor.execute("""
+            SELECT id, Fecha_Reporte, Numero_Documento, Nombres, Apellidos,
+                   Fecha_cierre, Placa, Valor_Reporte, Descripcion_Reporte,
+                   Vehiculo_afiliado, Estado
+            FROM personas
+            WHERE Numero_Documento = %s AND Reportante_Nombres = %s
+            ORDER BY Fecha_Reporte DESC
+        """, (cedula, request.usuario['id_user']))
+        
+        reportes = cursor.fetchall()
+        
+        if not reportes:
+            return jsonify({
+                'success': True,
+                'found': False,
+                'message': 'No tienes reportes creados para esta cédula',
+                'reportes': []
+            }), 200
+        
+        # Formatear respuesta
+        reportes_formateados = []
+        for r in reportes:
+            reportes_formateados.append({
+                'id': r['id'],
+                'fecha_reporte': r['Fecha_Reporte'].strftime('%Y-%m-%d %H:%M') if r['Fecha_Reporte'] else None,
+                'numero_documento': r['Numero_Documento'],
+                'nombres': r['Nombres'],
+                'apellidos': r['Apellidos'],
+                'placa': r['Placa'],
+                'valor_reporte': r['Valor_Reporte'],
+                'descripcion': r['Descripcion_Reporte'],
+                'estado': r['Estado']
+            })
+        
+        return jsonify({
+            'success': True,
+            'found': True,
+            'total_reportes': len(reportes),
+            'reportes': reportes_formateados
+        }), 200
+        
+    except Error as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
 # ==================== SERVICIO 3: CONSULTAR PERSONA POR CÉDULA ====================
 @app.route('/api/personas/<cedula>', methods=['GET'])
 @verificar_usuario
