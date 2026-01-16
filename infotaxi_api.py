@@ -3,18 +3,19 @@ API REST para Sistema InfoTaxi con Swagger UI
 Servicios de gestión de usuarios y reportes
 """
 
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, render_template_string
 from flask_cors import CORS
 from flasgger import Swagger, swag_from
 import mysql.connector
 from mysql.connector import Error
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 import io
 import os
+import secrets
 from functools import wraps
 
 app = Flask(__name__)
@@ -1840,7 +1841,609 @@ def health_check():
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response, 500
 
-# ==================== ENDPOINT: DESCARGAR PLANTILLA EXCEL ====================
+# ==================== ENDPOINT: GENERAR TOKEN PARA CARGA MASIVA ====================
+@app.route('/api/generar-token-carga', methods=['POST', 'OPTIONS'])
+def generar_token_carga():
+    """
+    Genera un token temporal para carga masiva asociado a un usuario
+    ---
+    tags:
+      - Excel
+    parameters:
+      - name: X-User-Celular
+        in: header
+        type: string
+        required: true
+        description: Celular del usuario
+    responses:
+      200:
+        description: Token generado exitosamente
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            token:
+              type: string
+            url:
+              type: string
+            expira_en:
+              type: string
+      500:
+        description: Error al generar token
+    """
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "Content-Type,X-User-Celular,Authorization,Accept")
+        response.headers.add('Access-Control-Allow-Methods', "POST,OPTIONS")
+        return response
+    
+    celular = request.headers.get('X-User-Celular')
+    
+    if not celular:
+        return jsonify({
+            'success': False,
+            'message': 'Celular requerido en headers'
+        }), 401
+    
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'message': 'Error de conexión a BD'}), 500
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Verificar que el usuario existe
+        cursor.execute("SELECT id_user, nombres FROM users WHERE Celular = %s AND isactive = 1", (celular,))
+        usuario = cursor.fetchone()
+        
+        if not usuario:
+            cursor.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': 'Usuario no encontrado o inactivo'
+            }), 403
+        
+        # Generar token único
+        token = secrets.token_urlsafe(32)
+        
+        # Fecha de expiración (24 horas)
+        expiracion = datetime.now() + timedelta(hours=24)
+        
+        # Guardar en user_state (reutilizamos la tabla)
+        cursor.execute("""
+            INSERT INTO user_state (celular, estado, opcion, updated_at) 
+            VALUES (%s, %s, 4, %s)
+            ON DUPLICATE KEY UPDATE estado = %s, opcion = 4, updated_at = %s
+        """, (celular, f"token_carga:{token}:{expiracion.isoformat()}", datetime.now(), f"token_carga:{token}:{expiracion.isoformat()}", datetime.now()))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        # Construir URL completa
+        base_url = request.host_url.rstrip('/')
+        upload_url = f"{base_url}/carga-masiva/{token}"
+        
+        response = jsonify({
+            'success': True,
+            'token': token,
+            'url': upload_url,
+            'expira_en': '24 horas',
+            'mensaje': f'Link generado para {usuario["nombres"]}'
+        })
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        return response, 200
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Error al generar token: {str(e)}'
+        }), 500
+
+# ==================== PÁGINA WEB: CARGA MASIVA ====================
+@app.route('/carga-masiva/<token>', methods=['GET'])
+def pagina_carga_masiva(token):
+    """Página web para descargar plantilla y subir archivo"""
+    
+    # Validar token
+    conn = get_db_connection()
+    if not conn:
+        return "Error de conexión a la base de datos", 500
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT celular, estado, updated_at FROM user_state WHERE estado LIKE %s", (f"token_carga:{token}:%",))
+        token_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not token_data:
+            return """
+            <!DOCTYPE html>
+            <html><head><meta charset="UTF-8"><title>Token Inválido</title></head>
+            <body style="font-family:Arial;text-align:center;padding:50px;">
+                <h1>❌ Token Inválido</h1>
+                <p>Este link no existe o ya expiró.</p>
+            </body></html>
+            """, 404
+        
+        # Extraer fecha de expiración del estado
+        estado_parts = token_data['estado'].split(':')
+        if len(estado_parts) < 3:
+            return "Token mal formado", 400
+        
+        fecha_expiracion_str = estado_parts[2]
+        fecha_expiracion = datetime.fromisoformat(fecha_expiracion_str)
+        
+        # Verificar si expiró
+        if datetime.now() > fecha_expiracion:
+            return """
+            <!DOCTYPE html>
+            <html><head><meta charset="UTF-8"><title>Token Expirado</title></head>
+            <body style="font-family:Arial;text-align:center;padding:50px;">
+                <h1>⏰ Token Expirado</h1>
+                <p>Este link ya caducó. Solicita uno nuevo desde WhatsApp.</p>
+            </body></html>
+            """, 403
+        
+        # Obtener datos del usuario
+        celular = token_data['celular']
+        
+        html = f"""
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>InfoTaxi - Carga Masiva</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+            <style>
+                * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+                body {{ 
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 20px;
+                }}
+                .container {{
+                    background: white;
+                    padding: 40px;
+                    border-radius: 15px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                    max-width: 600px;
+                    width: 100%;
+                }}
+                h1 {{ color: #2c3e50; margin-bottom: 10px; text-align: center; }}
+                .subtitle {{ text-align: center; color: #7f8c8d; margin-bottom: 30px; }}
+                .section {{
+                    background: #f8f9fa;
+                    padding: 25px;
+                    border-radius: 10px;
+                    margin-bottom: 25px;
+                    border-left: 4px solid #f39c12;
+                }}
+                .section h2 {{
+                    color: #2c3e50;
+                    font-size: 20px;
+                    margin-bottom: 15px;
+                }}
+                .btn {{
+                    display: inline-block;
+                    padding: 15px 30px;
+                    background: #27ae60;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                    transition: all 0.3s;
+                    border: none;
+                    cursor: pointer;
+                    width: 100%;
+                    font-size: 16px;
+                    margin-top: 10px;
+                }}
+                .btn:hover {{ background: #229954; transform: translateY(-2px); }}
+                .btn-upload {{ background: #f39c12; }}
+                .btn-upload:hover {{ background: #e67e22; }}
+                .file-input {{
+                    display: none;
+                }}
+                .file-label {{
+                    display: block;
+                    padding: 40px;
+                    border: 3px dashed #ddd;
+                    border-radius: 10px;
+                    text-align: center;
+                    cursor: pointer;
+                    transition: all 0.3s;
+                    margin: 15px 0;
+                }}
+                .file-label:hover {{ border-color: #f39c12; background: #fef9e7; }}
+                .file-label i {{ font-size: 48px; color: #f39c12; display: block; margin-bottom: 10px; }}
+                .result {{
+                    margin-top: 20px;
+                    padding: 15px;
+                    border-radius: 8px;
+                    display: none;
+                }}
+                .result.success {{ background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }}
+                .result.error {{ background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }}
+                .loading {{
+                    text-align: center;
+                    padding: 20px;
+                    display: none;
+                }}
+                .loading i {{ font-size: 48px; color: #f39c12; animation: spin 1s linear infinite; }}
+                @keyframes spin {{ from {{ transform: rotate(0deg); }} to {{ transform: rotate(360deg); }} }}
+                .info {{ background: #d1ecf1; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8; margin-bottom: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1><i class="fas fa-taxi"></i> InfoTaxi</h1>
+                <p class="subtitle">Carga Masiva de Reportes</p>
+                
+                <div class="info">
+                    <i class="fas fa-info-circle"></i> 
+                    <strong>Link personal de carga</strong><br>
+                    Usuario: {celular}<br>
+                    Expira: {fecha_expiracion.strftime('%d/%m/%Y %H:%M')}
+                </div>
+                
+                <div class="section">
+                    <h2><i class="fas fa-download"></i> Paso 1: Descargar Plantilla</h2>
+                    <p>Descarga la plantilla Excel con el formato correcto:</p>
+                    <a href="/api/plantilla-excel-token/{token}" class="btn" download>
+                        <i class="fas fa-file-excel"></i> Descargar Plantilla Excel
+                    </a>
+                </div>
+                
+                <div class="section">
+                    <h2><i class="fas fa-upload"></i> Paso 2: Subir Archivo Completado</h2>
+                    <p>Selecciona tu archivo Excel con los reportes:</p>
+                    <form id="uploadForm" enctype="multipart/form-data">
+                        <input type="file" id="excelFile" name="file" accept=".xlsx" class="file-input" onchange="updateFileName()">
+                        <label for="excelFile" class="file-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span id="fileName">Click para seleccionar archivo .xlsx</span>
+                        </label>
+                        <button type="submit" class="btn btn-upload">
+                            <i class="fas fa-upload"></i> Importar Reportes
+                        </button>
+                    </form>
+                    
+                    <div class="loading" id="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Procesando archivo...</p>
+                    </div>
+                    
+                    <div class="result" id="result"></div>
+                </div>
+            </div>
+            
+            <script>
+                const token = '{token}';
+                const celular = '{celular}';
+                
+                function updateFileName() {{
+                    const input = document.getElementById('excelFile');
+                    const label = document.getElementById('fileName');
+                    if (input.files.length > 0) {{
+                        label.textContent = input.files[0].name;
+                    }}
+                }}
+                
+                document.getElementById('uploadForm').addEventListener('submit', async (e) => {{
+                    e.preventDefault();
+                    
+                    const fileInput = document.getElementById('excelFile');
+                    const file = fileInput.files[0];
+                    
+                    if (!file) {{
+                        showResult('Por favor selecciona un archivo', 'error');
+                        return;
+                    }}
+                    
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    document.getElementById('loading').style.display = 'block';
+                    document.getElementById('result').style.display = 'none';
+                    
+                    try {{
+                        const response = await fetch(`/api/importar-excel-token/${{token}}`, {{
+                            method: 'POST',
+                            body: formData
+                        }});
+                        
+                        const data = await response.json();
+                        
+                        document.getElementById('loading').style.display = 'none';
+                        
+                        if (data.success) {{
+                            let message = `✅ Importación completada\\n`;
+                            message += `Total: ${{data.total_filas}}\\n`;
+                            message += `Importados: ${{data.importados}}\\n`;
+                            message += `Errores: ${{data.errores}}`;
+                            
+                            if (data.detalles && data.detalles.length > 0) {{
+                                message += '\\n\\nDetalles:\\n';
+                                data.detalles.slice(0, 10).forEach(det => {{
+                                    const icon = det.status === 'success' ? '✅' : '❌';
+                                    message += `${{icon}} Fila ${{det.fila}}: ${{det.mensaje}}\\n`;
+                                }});
+                            }}
+                            
+                            showResult(message, 'success');
+                            fileInput.value = '';
+                            document.getElementById('fileName').textContent = 'Click para seleccionar archivo .xlsx';
+                        }} else {{
+                            showResult('❌ Error: ' + (data.message || 'Error desconocido'), 'error');
+                        }}
+                    }} catch (error) {{
+                        document.getElementById('loading').style.display = 'none';
+                        showResult('❌ Error de conexión: ' + error.message, 'error');
+                    }}
+                }});
+                
+                function showResult(message, type) {{
+                    const resultDiv = document.getElementById('result');
+                    resultDiv.textContent = message;
+                    resultDiv.className = 'result ' + type;
+                    resultDiv.style.display = 'block';
+                }}
+            </script>
+        </body>
+        </html>
+        """
+        
+        return html
+        
+    except Exception as e:
+        return f"Error al cargar la página: {str(e)}", 500
+
+# ==================== ENDPOINT: DESCARGAR PLANTILLA CON TOKEN ====================
+@app.route('/api/plantilla-excel-token/<token>', methods=['GET'])
+def descargar_plantilla_con_token(token):
+    """Descarga plantilla Excel validando el token"""
+    
+    # Validar token
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({{'success': False, 'message': 'Error de conexión'}}), 500
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT celular FROM user_state WHERE estado LIKE %s", (f"token_carga:{token}:%",))
+        token_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if not token_data:
+            return jsonify({{'success': False, 'message': 'Token inválido'}}), 404
+        
+        # Crear plantilla Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Plantilla Reportes"
+        
+        # Headers según la imagen proporcionada
+        headers = [
+            'Documento Conductor',
+            'Nombre Conductor',
+            'Apellidos Conductor',
+            'Fecha Inicio Reporte',
+            'Placa Vehiculo',
+            'Valor del Reporte',
+            'Descripcion del Reporte',
+            'Vehiculo Afiliado'
+        ]
+        
+        # Estilo para el header
+        header_fill = PatternFill(start_color="5B9BD5", end_color="5B9BD5", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True, size=11)
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        
+        # Escribir headers
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.value = header
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+        
+        # Ajustar anchos de columnas
+        ws.column_dimensions['A'].width = 20  # Documento Conductor
+        ws.column_dimensions['B'].width = 20  # Nombre Conductor
+        ws.column_dimensions['C'].width = 22  # Apellidos Conductor
+        ws.column_dimensions['D'].width = 20  # Fecha Inicio Reporte
+        ws.column_dimensions['E'].width = 15  # Placa Vehiculo
+        ws.column_dimensions['F'].width = 18  # Valor del Reporte
+        ws.column_dimensions['G'].width = 40  # Descripcion del Reporte
+        ws.column_dimensions['H'].width = 18  # Vehiculo Afiliado
+        
+        # Agregar fila de ejemplo
+        ws.append([
+            '123456789',
+            'Juan',
+            'Pérez',
+            '2026-01-15',
+            'ABC123',
+            '50000',
+            'Descripción del reporte',
+            'SI'
+        ])
+        
+        # Guardar en memoria
+        excel_file = io.BytesIO()
+        wb.save(excel_file)
+        excel_file.seek(0)
+        
+        filename = f"Plantilla_Importacion.xlsx"
+        
+        return send_file(
+            excel_file,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        return jsonify({{'success': False, 'message': f'Error al generar plantilla: {{str(e)}}' }}), 500
+
+# ==================== ENDPOINT: IMPORTAR EXCEL CON TOKEN ====================
+@app.route('/api/importar-excel-token/<token>', methods=['POST'])
+def importar_excel_con_token(token):
+    """Importa reportes validando el token"""
+    
+    # Validar token
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({{'success': False, 'message': 'Error de conexión'}}), 500
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT celular FROM user_state WHERE estado LIKE %s", (f"token_carga:{token}:%",))
+        token_data = cursor.fetchone()
+        
+        if not token_data:
+            cursor.close()
+            conn.close()
+            return jsonify({{'success': False, 'message': 'Token inválido'}}), 404
+        
+        celular = token_data['celular']
+        
+        # Obtener id_user
+        cursor.execute("SELECT id_user FROM users WHERE Celular = %s", (celular,))
+        user_result = cursor.fetchone()
+        
+        if not user_result:
+            cursor.close()
+            conn.close()
+            return jsonify({{'success': False, 'message': 'Usuario no encontrado'}}), 400
+        
+        id_user = user_result['id_user']
+        
+        # Verificar archivo
+        if 'file' not in request.files:
+            cursor.close()
+            conn.close()
+            return jsonify({{'success': False, 'message': 'No se envió ningún archivo'}}), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            cursor.close()
+            conn.close()
+            return jsonify({{'success': False, 'message': 'No se seleccionó ningún archivo'}}), 400
+        
+        if not file.filename.endswith('.xlsx'):
+            cursor.close()
+            conn.close()
+            return jsonify({{'success': False, 'message': 'El archivo debe ser formato .xlsx'}}), 400
+        
+        # Leer Excel
+        df = pd.read_excel(file, engine='openpyxl')
+        
+        # Validar columnas según la plantilla
+        columnas_requeridas = [
+            'Documento Conductor', 'Nombre Conductor', 'Apellidos Conductor',
+            'Placa Vehiculo', 'Valor del Reporte', 'Descripcion del Reporte'
+        ]
+        
+        for col in columnas_requeridas:
+            if col not in df.columns:
+                cursor.close()
+                conn.close()
+                return jsonify({{
+                    'success': False,
+                    'message': f'Falta la columna requerida: {{col}}'
+                }}), 400
+        
+        # Procesar filas
+        total_filas = len(df)
+        importados = 0
+        errores = 0
+        detalles = []
+        
+        for index, row in df.iterrows():
+            fila_num = index + 2
+            
+            try:
+                # Validar campos
+                if pd.isna(row['Documento Conductor']) or pd.isna(row['Nombre Conductor']) or pd.isna(row['Apellidos Conductor']):
+                    detalles.append({{
+                        'fila': fila_num,
+                        'status': 'error',
+                        'mensaje': 'Campos obligatorios vacíos'
+                    }})
+                    errores += 1
+                    continue
+                
+                # Extraer datos
+                numero_doc = str(row['Documento Conductor']).strip()
+                nombres = str(row['Nombre Conductor']).strip()
+                apellidos = str(row['Apellidos Conductor']).strip()
+                placa = str(row['Placa Vehiculo']).strip() if not pd.isna(row['Placa Vehiculo']) else ''
+                valor = str(row['Valor del Reporte']).strip() if not pd.isna(row['Valor del Reporte']) else '0'
+                descripcion = str(row['Descripcion del Reporte']).strip() if not pd.isna(row['Descripcion del Reporte']) else ''
+                vehiculo_afiliado = str(row['Vehiculo Afiliado']).strip().upper() if not pd.isna(row['Vehiculo Afiliado']) else 'No'
+                
+                # Insertar
+                query = """
+                    INSERT INTO personas 
+                    (Fecha_Reporte, Numero_Documento, Nombres, Apellidos, 
+                     Placa, Valor_Reporte, Descripcion_Reporte, 
+                     Vehiculo_afiliado, Estado, Reportante_Nombres)
+                    VALUES (NOW(), %s, %s, %s, %s, %s, %s, %s, 'Activo', %s)
+                """
+                
+                cursor.execute(query, (
+                    numero_doc, nombres, apellidos, 
+                    placa, valor, descripcion, vehiculo_afiliado, id_user
+                ))
+                
+                importados += 1
+                detalles.append({{
+                    'fila': fila_num,
+                    'status': 'success',
+                    'mensaje': f'Reporte importado: {{nombres}} {{apellidos}}'
+                }})
+                
+            except Exception as e:
+                errores += 1
+                detalles.append({{
+                    'fila': fila_num,
+                    'status': 'error',
+                    'mensaje': f'Error: {{str(e)}}'
+                }})
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({{
+            'success': True,
+            'message': f'Importación completada: {{importados}} exitosos, {{errores}} errores',
+            'total_filas': total_filas,
+            'importados': importados,
+            'errores': errores,
+            'detalles': detalles
+        }}), 200
+        
+    except Exception as e:
+        return jsonify({{
+            'success': False,
+            'message': f'Error al procesar el archivo: {{str(e)}}'
+        }}), 500
+
+# ==================== ENDPOINT: DESCARGAR PLANTILLA EXCEL (ORIGINAL) ====================
 @app.route('/api/plantilla-excel', methods=['GET', 'OPTIONS'])
 def descargar_plantilla_excel():
     """
