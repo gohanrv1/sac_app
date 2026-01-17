@@ -563,7 +563,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Obtener la respuesta del endpoint\nconst data = $input.first().json;\nconst found = data.found;\nconst reportes = data.reportes || [];\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id;\n\nlet mensaje = `📋 *Tus Reportes para Editar*\\n\\n`;\n\nif (!found || reportes.length === 0) {\n  mensaje += `❌ No tienes reportes creados para esta cédula.\\n\\n`;\n  mensaje += `_Usa la opción 2 del menú para crear nuevos reportes._`;\n  return {\n    json: {\n      mensaje,\n      celular,\n      hayReportes: false\n    }\n  };\n}\n\nconst persona = reportes[0];\nmensaje += `👤 *Nombre:* ${persona.nombres || 'N/A'} ${persona.apellidos || 'N/A'}\\n`;\nmensaje += `🆔 *Cédula:* ${persona.numero_documento || 'N/A'}\\n`;\nmensaje += `🚖 *Placa:* ${persona.placa || 'N/A'}\\n\\n`;\nmensaje += `⚠️ *Total de Reportes Tuyos:* ${reportes.length}\\n\\n`;\n\nreportes.forEach((reporte, index) => {\n  mensaje += `📝 *Reporte #${index + 1}* (ID: ${reporte.id})\\n`;\n  mensaje += `   Nombres: ${reporte.nombres || 'N/A'}\\n`;\n  mensaje += `   Apellidos: ${reporte.apellidos || 'N/A'}\\n`;\n  mensaje += `   Placa: ${reporte.placa || 'N/A'}\\n`;\n  mensaje += `   Estado: ${reporte.estado || 'N/A'}\\n`;\n  mensaje += `   Descripción: ${reporte.descripcion || 'N/A'}\\n`;\n  mensaje += `   Valor: $${reporte.valor_reporte || 0}\\n`;\n  mensaje += `   Fecha: ${reporte.fecha_reporte || 'N/A'}\\n\\n`;\n});\n\n// Generar mensaje separado con formatos para copiar\nlet mensajeFormatos = `✏️ *Formatos para Copiar y Editar*\\n\\n`;\nmensajeFormatos += `_Copia el que necesites, pégalo y modifica solo lo que quieras cambiar:_\\n\\n`;\n\nreportes.forEach((reporte, index) => {\n  const formatoEdicion = `${reporte.id},${reporte.nombres || ''},${reporte.apellidos || ''},${reporte.placa || ''},${reporte.valor_reporte || ''},${reporte.descripcion || ''},${reporte.estado || ''}`;\n  mensajeFormatos += `*#${index + 1}:*\\n\\`${formatoEdicion}\\`\\n\\n`;\n});\n\nmensajeFormatos += `_💡 Deja campos vacíos (pero respeta las comas) si no quieres cambiarlos._`;\n\nreturn {\n  json: {\n    mensaje,\n    mensajeFormatos,\n    celular,\n    hayReportes: true\n  }\n};\n"
+        "jsCode": "// Obtener la respuesta del endpoint\nconst data = $input.first().json;\nconst found = data.found;\nconst reportes = data.reportes || [];\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id;\n\nlet mensaje = `📋 *Tus Reportes para Editar*\\n\\n`;\n\nif (!found || reportes.length === 0) {\n  mensaje += `❌ No tienes reportes creados para esta cédula.\\n\\n`;\n  mensaje += `_Usa la opción 2 del menú para crear nuevos reportes._`;\n  return {\n    json: {\n      mensaje,\n      celular,\n      hayReportes: false\n    }\n  };\n}\n\nconst persona = reportes[0];\nmensaje += `👤 *Nombre:* ${persona.nombres || 'N/A'} ${persona.apellidos || 'N/A'}\\n`;\nmensaje += `🆔 *Cédula:* ${persona.numero_documento || 'N/A'}\\n`;\nmensaje += `🚖 *Placa:* ${persona.placa || 'N/A'}\\n\\n`;\nmensaje += `⚠️ *Total de Reportes Tuyos:* ${reportes.length}\\n\\n`;\n\nreportes.forEach((reporte, index) => {\n  mensaje += `📝 *Reporte #${index + 1}* (ID: ${reporte.id})\\n`;\n  mensaje += `   Nombres: ${reporte.nombres || 'N/A'}\\n`;\n  mensaje += `   Apellidos: ${reporte.apellidos || 'N/A'}\\n`;\n  mensaje += `   Placa: ${reporte.placa || 'N/A'}\\n`;\n  mensaje += `   Estado: ${reporte.estado || 'N/A'}\\n`;\n  mensaje += `   Descripción: ${reporte.descripcion || 'N/A'}\\n`;\n  mensaje += `   Valor: $${reporte.valor_reporte || 0}\\n`;\n  mensaje += `   Fecha: ${reporte.fecha_reporte || 'N/A'}\\n\\n`;\n});\n\n// Generar array de formatos individuales (uno por cada reporte)\nconst formatos = reportes.map((reporte, index) => {\n  const formatoEdicion = `${reporte.id},${reporte.nombres || ''},${reporte.apellidos || ''},${reporte.placa || ''},${reporte.valor_reporte || ''},${reporte.descripcion || ''},${reporte.estado || ''}`;\n  return {\n    celular,\n    formatoTexto: formatoEdicion,\n    numeroReporte: index + 1\n  };\n});\n\nreturn [\n  {\n    json: {\n      mensaje,\n      celular,\n      hayReportes: true,\n      formatos  // Guardamos los formatos para uso posterior\n    }\n  },\n  ...formatos.map(f => ({ json: f }))  // Retornamos cada formato como un item separado\n];\n"
       },
       "id": "6f8ebce5-8076-4cc9-976d-20bc66f5d92b",
       "name": "Formatear Reportes para Editar",
@@ -620,10 +620,24 @@
     },
     {
       "parameters": {
+        "include": "specifiedFields",
+        "fields": "formatoTexto, celular"
+      },
+      "id": "filtrar-solo-formatos",
+      "name": "Filtrar Solo Formatos",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 3,
+      "position": [
+        -464,
+        -4176
+      ]
+    },
+    {
+      "parameters": {
         "operation": "send",
         "phoneNumberId": "821068047761861",
-        "recipientPhoneNumber": "={{ $('Formatear Reportes para Editar').item.json.celular }}",
-        "textBody": "={{ $('Formatear Reportes para Editar').item.json.mensajeFormatos }}",
+        "recipientPhoneNumber": "={{ $json.celular }}",
+        "textBody": "={{ $json.formatoTexto }}",
         "additionalFields": {}
       },
       "id": "enviar-formatos-copiar",
@@ -631,7 +645,7 @@
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -464,
+        -240,
         -4176
       ],
       "webhookId": "enviar-formatos-copiar-webhook",
@@ -656,7 +670,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -240,
+        -16,
         -4176
       ]
     },
@@ -2652,6 +2666,17 @@
       ]
     },
     "Enviar: Reportes para Editar": {
+      "main": [
+        [
+          {
+            "node": "Filtrar Solo Formatos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Solo Formatos": {
       "main": [
         [
           {
