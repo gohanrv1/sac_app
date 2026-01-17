@@ -2361,20 +2361,25 @@ def importar_excel_con_token(token):
         # Leer Excel
         df = pd.read_excel(file, engine='openpyxl')
         
-        # Validar columnas según la plantilla
+        # Limpiar nombres de columnas (quitar espacios extra)
+        df.columns = df.columns.str.strip()
+        
+        # Mapeo de nombres de columnas (normalizar)
         columnas_requeridas = [
             'Documento Conductor', 'Nombre Conductor', 'Apellidos Conductor',
             'Placa Vehiculo', 'Valor del Reporte', 'Descripcion del Reporte'
         ]
         
-        for col in columnas_requeridas:
-            if col not in df.columns:
-                cursor.close()
-                conn.close()
-                return jsonify({
-                    'success': False,
-                    'message': f'Falta la columna requerida: {col}'
-                }), 400
+        # Verificar columnas - Si falta alguna, mostrar cuáles tiene el archivo
+        columnas_faltantes = [col for col in columnas_requeridas if col not in df.columns]
+        
+        if columnas_faltantes:
+            cursor.close()
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': f'Columnas faltantes: {", ".join(columnas_faltantes)}. Columnas encontradas: {", ".join(df.columns.tolist())}'
+            }), 400
         
         # Procesar filas
         total_filas = len(df)
