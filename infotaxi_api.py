@@ -1912,12 +1912,29 @@ def generar_token_carga():
         # Fecha de expiración (24 horas)
         expiracion = datetime.now() + timedelta(hours=24)
         
-        # Guardar en user_state (reutilizamos la tabla)
+        # Crear tabla si no existe
         cursor.execute("""
-            INSERT INTO user_state (celular, estado, opcion, updated_at) 
-            VALUES (%s, %s, 4, %s)
-            ON DUPLICATE KEY UPDATE estado = %s, opcion = 4, updated_at = %s
-        """, (celular, f"token_carga:{token}:{expiracion.isoformat()}", datetime.now(), f"token_carga:{token}:{expiracion.isoformat()}", datetime.now()))
+            CREATE TABLE IF NOT EXISTS token_carga (
+                token VARCHAR(100) PRIMARY KEY,
+                celular VARCHAR(20) NOT NULL,
+                expiracion DATETIME NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_celular (celular),
+                INDEX idx_expiracion (expiracion)
+            )
+        """)
+        
+        # Limpiar tokens expirados del usuario
+        cursor.execute("""
+            DELETE FROM token_carga 
+            WHERE celular = %s OR expiracion < NOW()
+        """, (celular,))
+        
+        # Guardar token
+        cursor.execute("""
+            INSERT INTO token_carga (token, celular, expiracion) 
+            VALUES (%s, %s, %s)
+        """, (token, celular, expiracion))
         
         conn.commit()
         cursor.close()
@@ -1955,12 +1972,16 @@ def pagina_carga_masiva(token):
     
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT celular, estado, updated_at FROM user_state WHERE estado LIKE %s", (f"token_carga:{token}:%",))
+        cursor.execute("""
+            SELECT celular, expiracion 
+            FROM token_carga 
+            WHERE token = %s AND expiracion > NOW()
+        """, (token,))
         token_data = cursor.fetchone()
-        cursor.close()
-        conn.close()
         
         if not token_data:
+            cursor.close()
+            conn.close()
             return """
             <!DOCTYPE html>
             <html><head><meta charset="UTF-8"><title>Token Inválido</title></head>
@@ -1970,27 +1991,10 @@ def pagina_carga_masiva(token):
             </body></html>
             """, 404
         
-        # Extraer fecha de expiración del estado
-        estado_parts = token_data['estado'].split(':')
-        if len(estado_parts) < 3:
-            return "Token mal formado", 400
-        
-        fecha_expiracion_str = estado_parts[2]
-        fecha_expiracion = datetime.fromisoformat(fecha_expiracion_str)
-        
-        # Verificar si expiró
-        if datetime.now() > fecha_expiracion:
-            return """
-            <!DOCTYPE html>
-            <html><head><meta charset="UTF-8"><title>Token Expirado</title></head>
-            <body style="font-family:Arial;text-align:center;padding:50px;">
-                <h1>⏰ Token Expirado</h1>
-                <p>Este link ya caducó. Solicita uno nuevo desde WhatsApp.</p>
-            </body></html>
-            """, 403
-        
-        # Obtener datos del usuario
+        fecha_expiracion = token_data['expiracion']
         celular = token_data['celular']
+        cursor.close()
+        conn.close()
         
         html = f"""
         <!DOCTYPE html>
@@ -2220,13 +2224,16 @@ def descargar_plantilla_con_token(token):
     
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT celular FROM user_state WHERE estado LIKE %s", (f"token_carga:{token}:%",))
+        cursor.execute("""
+            SELECT celular FROM token_carga 
+            WHERE token = %s AND expiracion > NOW()
+        """, (token,))
         token_data = cursor.fetchone()
         cursor.close()
         conn.close()
         
         if not token_data:
-            return jsonify({'success': False, 'message': 'Token inválido'}), 404
+            return jsonify({'success': False, 'message': 'Token inválido o expirado'}), 404
         
         # Crear plantilla Excel
         wb = Workbook()
@@ -2309,13 +2316,16 @@ def importar_excel_con_token(token):
     
     try:
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT celular FROM user_state WHERE estado LIKE %s", (f"token_carga:{token}:%",))
+        cursor.execute("""
+            SELECT celular FROM token_carga 
+            WHERE token = %s AND expiracion > NOW()
+        """, (token,))
         token_data = cursor.fetchone()
         
         if not token_data:
             cursor.close()
             conn.close()
-            return jsonify({'success': False, 'message': 'Token inválido'}), 404
+            return jsonify({'success': False, 'message': 'Token inválido o expirado'}), 404
         
         celular = token_data['celular']
         
