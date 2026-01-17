@@ -2295,7 +2295,7 @@ def descargar_plantilla_con_token(token):
         )
         
     except Exception as e:
-        return jsonify({{'success': False, 'message': f'Error al generar plantilla: {{str(e)}}' }}), 500
+        return jsonify({'success': False, 'message': f'Error al generar plantilla: {str(e)}'}), 500
 
 # ==================== ENDPOINT: IMPORTAR EXCEL CON TOKEN ====================
 @app.route('/api/importar-excel-token/<token>', methods=['POST'])
@@ -2315,7 +2315,7 @@ def importar_excel_con_token(token):
         if not token_data:
             cursor.close()
             conn.close()
-            return jsonify({{'success': False, 'message': 'Token inválido'}}), 404
+            return jsonify({'success': False, 'message': 'Token inválido'}), 404
         
         celular = token_data['celular']
         
@@ -2326,7 +2326,7 @@ def importar_excel_con_token(token):
         if not user_result:
             cursor.close()
             conn.close()
-            return jsonify({{'success': False, 'message': 'Usuario no encontrado'}}), 400
+            return jsonify({'success': False, 'message': 'Usuario no encontrado'}), 400
         
         id_user = user_result['id_user']
         
@@ -2334,19 +2334,19 @@ def importar_excel_con_token(token):
         if 'file' not in request.files:
             cursor.close()
             conn.close()
-            return jsonify({{'success': False, 'message': 'No se envió ningún archivo'}}), 400
+            return jsonify({'success': False, 'message': 'No se envió ningún archivo'}), 400
         
         file = request.files['file']
         
         if file.filename == '':
             cursor.close()
             conn.close()
-            return jsonify({{'success': False, 'message': 'No se seleccionó ningún archivo'}}), 400
+            return jsonify({'success': False, 'message': 'No se seleccionó ningún archivo'}), 400
         
         if not file.filename.endswith('.xlsx'):
             cursor.close()
             conn.close()
-            return jsonify({{'success': False, 'message': 'El archivo debe ser formato .xlsx'}}), 400
+            return jsonify({'success': False, 'message': 'El archivo debe ser formato .xlsx'}), 400
         
         # Leer Excel
         df = pd.read_excel(file, engine='openpyxl')
@@ -2554,7 +2554,6 @@ def descargar_plantilla_excel():
 
 # ==================== ENDPOINT: IMPORTAR EXCEL ====================
 @app.route('/api/importar-excel', methods=['POST', 'OPTIONS'])
-@require_celular
 def importar_excel():
     """
     Importa reportes desde archivo Excel
