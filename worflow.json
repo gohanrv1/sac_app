@@ -101,6 +101,44 @@
     {
       "parameters": {
         "dataType": "string",
+        "value1": "={{ $('WhatsApp Trigger1').item.json.messages[0].text.body.trim().toLowerCase() }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "menu",
+              "operation": "equals"
+            }
+          ]
+        },
+        "fallbackOutput": 1
+      },
+      "id": "detectar-comando-menu",
+      "name": "¿Es Comando MENU?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2) }}",
+        "options": {}
+      },
+      "id": "limpiar-estado-menu",
+      "name": "Limpiar Estado (MENU)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -224,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
         "value1": "={{ $json.estado.estado }}",
         "rules": {
           "rules": [
@@ -199,7 +237,7 @@
         "operation": "send",
         "phoneNumberId": "821068047761861",
         "recipientPhoneNumber": "={{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id }}",
-        "textBody": "Por favor, selecciona una opción del menú enviando solo el número (1, 2, 3, 4, 5 o 6).\n\n📋 **Menú Principal**\n1. 🚕 Consultar taxistas\n2. 📝 Reportar taxistas\n3. ✏️ Editar mis reportes\n4. 📂 Reportar taxistas masivamente\n5. 👤 Crear usuario nuevo\n6. 🚫 Bloquear usuario",
+        "textBody": "Hola {{ $('Verificar Usuario1').item.json.usuario.nombres }} 👋\n\nBienvenido a **SAC**, su asistente virtual para consulta de referencias de conductores.\n\nPor favor, selecciona una opción del menú enviando solo el número (1, 2, 3, 4, 5 o 6).\n\n📋 **Menú Principal**\n1. 🚕 Consultar taxistas\n2. 📝 Reportar taxistas\n3. ✏️ Editar mis reportes\n4. 📂 Reportar taxistas masivamente\n5. 👤 Crear usuario nuevo\n6. 🚫 Bloquear usuario\n\n_💡 Escribe \"menu\" en cualquier momento para volver aquí._",
         "additionalFields": {}
       },
       "id": "a66695c9-b62e-443e-8bda-99f83fd3038e",
@@ -1893,7 +1931,7 @@
       "main": [
         [
           {
-            "node": "Router por Estado",
+            "node": "¿Es Comando MENU?",
             "type": "main",
             "index": 0
           }
@@ -1901,6 +1939,35 @@
         [
           {
             "node": "Verificar Usuario1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es Comando MENU?": {
+      "main": [
+        [
+          {
+            "node": "Limpiar Estado (MENU)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Router por Estado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar Estado (MENU)": {
+      "main": [
+        [
+          {
+            "node": "Enviar: Menú Principal1",
             "type": "main",
             "index": 0
           }
