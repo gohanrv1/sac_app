@@ -2226,7 +2226,7 @@ def descargar_plantilla_con_token(token):
         conn.close()
         
         if not token_data:
-            return jsonify({{'success': False, 'message': 'Token inválido'}}), 404
+            return jsonify({'success': False, 'message': 'Token inválido'}), 404
         
         # Crear plantilla Excel
         wb = Workbook()
@@ -2361,10 +2361,10 @@ def importar_excel_con_token(token):
             if col not in df.columns:
                 cursor.close()
                 conn.close()
-                return jsonify({{
+                return jsonify({
                     'success': False,
-                    'message': f'Falta la columna requerida: {{col}}'
-                }}), 400
+                    'message': f'Falta la columna requerida: {col}'
+                }), 400
         
         # Procesar filas
         total_filas = len(df)
@@ -2378,11 +2378,11 @@ def importar_excel_con_token(token):
             try:
                 # Validar campos
                 if pd.isna(row['Documento Conductor']) or pd.isna(row['Nombre Conductor']) or pd.isna(row['Apellidos Conductor']):
-                    detalles.append({{
+                    detalles.append({
                         'fila': fila_num,
                         'status': 'error',
                         'mensaje': 'Campos obligatorios vacíos'
-                    }})
+                    })
                     errores += 1
                     continue
                 
@@ -2410,38 +2410,38 @@ def importar_excel_con_token(token):
                 ))
                 
                 importados += 1
-                detalles.append({{
+                detalles.append({
                     'fila': fila_num,
                     'status': 'success',
-                    'mensaje': f'Reporte importado: {{nombres}} {{apellidos}}'
-                }})
+                    'mensaje': f'Reporte importado: {nombres} {apellidos}'
+                })
                 
             except Exception as e:
                 errores += 1
-                detalles.append({{
+                detalles.append({
                     'fila': fila_num,
                     'status': 'error',
-                    'mensaje': f'Error: {{str(e)}}'
-                }})
+                    'mensaje': f'Error: {str(e)}'
+                })
         
         conn.commit()
         cursor.close()
         conn.close()
         
-        return jsonify({{
+        return jsonify({
             'success': True,
-            'message': f'Importación completada: {{importados}} exitosos, {{errores}} errores',
+            'message': f'Importación completada: {importados} exitosos, {errores} errores',
             'total_filas': total_filas,
             'importados': importados,
             'errores': errores,
             'detalles': detalles
-        }}), 200
+        }), 200
         
     except Exception as e:
-        return jsonify({{
+        return jsonify({
             'success': False,
-            'message': f'Error al procesar el archivo: {{str(e)}}'
-        }}), 500
+            'message': f'Error al procesar el archivo: {str(e)}'
+        }), 500
 
 # ==================== ENDPOINT: DESCARGAR PLANTILLA EXCEL (ORIGINAL) ====================
 @app.route('/api/plantilla-excel', methods=['GET', 'OPTIONS'])
