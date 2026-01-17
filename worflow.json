@@ -622,8 +622,8 @@
       "parameters": {
         "operation": "send",
         "phoneNumberId": "821068047761861",
-        "recipientPhoneNumber": "={{ $json.celular }}",
-        "textBody": "={{ $json.mensajeFormatos }}",
+        "recipientPhoneNumber": "={{ $('Formatear Reportes para Editar').item.json.celular }}",
+        "textBody": "={{ $('Formatear Reportes para Editar').item.json.mensajeFormatos }}",
         "additionalFields": {}
       },
       "id": "enviar-formatos-copiar",
