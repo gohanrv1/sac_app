@@ -13,10 +13,10 @@
       "type": "n8n-nodes-base.whatsAppTrigger",
       "typeVersion": 1,
       "position": [
-        -2928,
-        -3328
+        -3824,
+        -3424
       ],
-      "id": "945641f7-7397-41ee-ba21-ca3106d7b254",
+      "id": "963b20e2-f1b8-4551-a97b-4e8e087252d7",
       "name": "WhatsApp Trigger1",
       "webhookId": "e8ba4709-52be-44e5-8572-3484b6b0325f",
       "credentials": {
@@ -35,13 +35,13 @@
         "jsonBody": "={{ { \"celular\": $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2)  } }}",
         "options": {}
       },
-      "id": "df8819c3-85a6-4fa3-a5d6-664bbb1e0ff7",
+      "id": "0afb9b2a-a65b-4065-96ff-71fdcd9e8aaa",
       "name": "Verificar Usuario1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -2256,
-        -2080
+        -3152,
+        -2256
       ]
     },
     {
@@ -49,13 +49,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "94710149-db14-460f-a9cc-65b971d18b5c",
+      "id": "5ad62972-8ce1-4186-a12f-14e0b4febebb",
       "name": "Consultar Estado Usuario",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -2704,
-        -3328
+        -3600,
+        -3424
       ]
     },
     {
@@ -69,13 +69,13 @@
           ]
         }
       },
-      "id": "c3a5b4a6-6698-4d0c-a628-dc31d99043e5",
+      "id": "479b948c-4411-4a1a-875d-95827c9c966d",
       "name": "¿Usuario Existe?1",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -2032,
-        -2080
+        -2928,
+        -2256
       ]
     },
     {
@@ -89,13 +89,13 @@
           ]
         }
       },
-      "id": "ab69b14a-934f-4acb-860c-b715cf5192f7",
+      "id": "1f469e95-5c63-4488-abe0-666989fdc2af",
       "name": "¿Tiene Estado Activo?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -2480,
-        -3328
+        -3376,
+        -3424
       ]
     },
     {
@@ -112,13 +112,13 @@
         },
         "fallbackOutput": 1
       },
-      "id": "a63aeaf3-f7e2-458f-90c7-7b6c9e3d1d70",
+      "id": "784ae0c5-0a99-48bc-8ff8-314c534d3970",
       "name": "¿Es Comando MENU?",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        -2256,
-        -3600
+        -3152,
+        -3680
       ]
     },
     {
@@ -127,13 +127,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "a37bb4fb-a69e-4d8e-ac27-a132722d2ab9",
+      "id": "147985a5-75eb-4520-b3df-f483f66a32d1",
       "name": "Limpiar Estado (MENU)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1808,
-        -2544
+        -2704,
+        -2608
       ]
     },
     {
@@ -169,13 +169,13 @@
         },
         "fallbackOutput": 3
       },
-      "id": "ac77ba5d-c61f-4c5e-81c0-d8c9cba14887",
+      "id": "642a1c56-fa7e-4f4b-89fe-348302230089",
       "name": "Router por Estado",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        -2032,
-        -4304
+        -2928,
+        -4400
       ]
     },
     {
@@ -199,13 +199,13 @@
         },
         "fallbackOutput": 0
       },
-      "id": "d87c5d73-cbe7-4c58-aa60-d6061f706bf7",
+      "id": "6ad6bb5a-4b96-42a2-a043-a87f042ee48d",
       "name": "Switch Estados Adicionales",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        -1808,
-        -3248
+        -2704,
+        -3344
       ]
     },
     {
@@ -216,13 +216,13 @@
         "textBody": "Esta es una red privada que solo funciona por invitación.",
         "additionalFields": {}
       },
-      "id": "82b8dd91-3bb4-4462-94eb-207641a19e44",
+      "id": "86a5a534-4d96-4289-b0fa-f0b04eae971a",
       "name": "Enviar: Sin Acceso1",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -1808,
-        -1888
+        -2704,
+        -2064
       ],
       "webhookId": "84373c08-a678-4091-8ad1-b7343e30e625",
       "credentials": {
@@ -236,13 +236,13 @@
       "parameters": {
         "jsCode": "// Extraer el texto del mensaje y el número de celular\nconst mensaje = $('WhatsApp Trigger1').first().json.messages[0].text.body || '';\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id || '';\n\n// Extraer solo el primer número del mensaje si es una opción\nconst opcion = mensaje.trim().match(/^\\d+/)?.[0] || mensaje.trim();\n\nreturn {\n  json: {\n    opcion: opcion,\n    celular: celular,\n    mensajeCompleto: mensaje\n  }\n};"
       },
-      "id": "18180530-0c6e-4eb5-8a6d-7e3416fbbfe0",
+      "id": "d8fa84f6-4bfc-412a-a01d-15a2ddda5d0f",
       "name": "Limpiar Entrada1",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1584,
-        -1872
+        -2480,
+        -1984
       ]
     },
     {
@@ -259,13 +259,13 @@
         },
         "fallbackOutput": 1
       },
-      "id": "5d637b74-49b2-4eb1-be05-ef2e034ff801",
+      "id": "b4fd7fd0-7ce5-4ad9-bc06-40e59da0256b",
       "name": "Clasificador Principal1",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        -1808,
-        -2144
+        -2704,
+        -2320
       ]
     },
     {
@@ -301,13 +301,13 @@
         },
         "fallbackOutput": 3
       },
-      "id": "4dfe2b08-ede7-4888-ab27-13cf003a75cf",
+      "id": "bd8bbad8-01cf-434a-a1d3-31374c2b292c",
       "name": "Router de Menú1",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        -1360,
-        -1904
+        -2256,
+        -2016
       ]
     },
     {
@@ -331,13 +331,13 @@
         },
         "fallbackOutput": 0
       },
-      "id": "34c35c0b-00c9-4480-8ff6-a3b295fd6f16",
+      "id": "b7ee6a6a-ef5e-4e45-adab-fa3fe7cf6d80",
       "name": "Switch Opciones 4-5-6",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 1,
       "position": [
-        -1136,
-        -1440
+        -2032,
+        -1552
       ]
     },
     {
@@ -349,13 +349,13 @@
         "jsonBody": "={{ { \"celular\": $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2), \"estado\": \"esperando_cedula\", \"opcion\": 1 } }}",
         "options": {}
       },
-      "id": "49d5e77a-0b98-4b17-8c57-000fb319d567",
+      "id": "238ea952-7316-4874-aa1b-8d97dcf651db",
       "name": "Guardar Estado: Esperando Cédula",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -2352
+        -2032,
+        -2448
       ]
     },
     {
@@ -363,16 +363,16 @@
         "operation": "send",
         "phoneNumberId": "821068047761861",
         "recipientPhoneNumber": "={{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id }}",
-        "textBody": "Has elegido la opción 1: **🚕 Consultar taxistas**.\n\nPor favor, envía la cédula en tu próximo mensaje (solo números, sin puntos ni comas).\n\n**Ejemplo:** 1042458045",
+        "textBody": "Has elegido la opción 1: **🚕 Consultar conductor**.\n\nPor favor, envía la cédula del conductor que deseas consultar (solo números, sin puntos ni comas).\n\n**Ejemplo:** 1042458045\n\n_Se mostrarán todos los reportes asociados a esa cédula._",
         "additionalFields": {}
       },
-      "id": "57e01058-ef7d-4333-b37d-1e316d2dcea5",
+      "id": "acf031dc-e9d6-46e0-b932-1c13bfa950ac",
       "name": "Pedir Cédula (Consulta)1",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -912,
-        -2352
+        -1808,
+        -2448
       ],
       "webhookId": "90c9e62a-935e-49d6-8fec-8e3dfbe0dd29",
       "credentials": {
@@ -391,13 +391,13 @@
         "jsonBody": "={{ { \"celular\": $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2), \"estado\": \"esperando_reporte\", \"opcion\": 2 } }}",
         "options": {}
       },
-      "id": "0766c4eb-d470-44cf-96ae-d3f4a630d079",
+      "id": "676967a7-24ad-4cb8-b38e-ca7ec21e5ad1",
       "name": "Guardar Estado: Esperando Reporte",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -2160
+        -2032,
+        -2256
       ]
     },
     {
@@ -405,16 +405,16 @@
         "operation": "send",
         "phoneNumberId": "821068047761861",
         "recipientPhoneNumber": "={{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id }}",
-        "textBody": "Has elegido la opción 2: **📝 Reportar taxistas**.\n\nPor favor, envía en tu próximo mensaje los datos del reporte en el siguiente formato, *separados por coma*:\n\n`Cédula, Nombres, Apellidos, Placa, Empresa, Descripción, Valor`\n\n**Ejemplo:**\n`1042458045,Gohan,Rodríguez,ABC123,GohanSas,Conducción peligrosa,600000`",
+        "textBody": "Has elegido la opción 2: **📝 Reportar conductor**.\n\nPor favor, envía en tu próximo mensaje los datos del reporte en el siguiente formato, *separados por coma*:\n\n`Cédula, Nombres, Apellidos, Placa, Empresa, Descripción, Valor`\n\n**Ejemplo:**\n`1042458045,Gohan,Rodríguez,ABC123,GohanSas,Conducción peligrosa,600000`",
         "additionalFields": {}
       },
-      "id": "7dff1e64-2dee-46cd-a48f-e51a452516a2",
+      "id": "0eb98542-25f1-487b-bbf2-3ab305c41759",
       "name": "Pedir Datos Reporte1",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -912,
-        -2160
+        -1808,
+        -2256
       ],
       "webhookId": "cf4be267-823f-4fd8-97ee-1a25a5c62eb1",
       "credentials": {
@@ -433,13 +433,13 @@
         "jsonBody": "={{ { \"celular\": $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2), \"estado\": \"esperando_cedula_editar\", \"opcion\": 3 } }}",
         "options": {}
       },
-      "id": "f5547f0e-a029-491f-a2bb-634e01a6d63b",
+      "id": "2ce70d4b-696e-4523-a3fa-db1baecfc7e5",
       "name": "Guardar Estado: Esperando ID Reporte",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -1792
+        -2032,
+        -1888
       ]
     },
     {
@@ -450,13 +450,13 @@
         "textBody": "Has elegido la opción 3: **✏️ Editar mis reportes**.\n\nPor favor, envía la cédula del taxista cuyos reportes quieres editar.\n\n**Ejemplo:** 1042458045\n\n_Nota: Solo verás los reportes que tú hayas creado._",
         "additionalFields": {}
       },
-      "id": "2478459e-5305-4129-8b69-564cc3289263",
+      "id": "a81846c5-938b-4787-84d1-287fecb4a958",
       "name": "Pedir Cédula (Editar)",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -912,
-        -1792
+        -1808,
+        -1888
       ],
       "webhookId": "pedir-id-reporte-webhook",
       "credentials": {
@@ -470,13 +470,13 @@
       "parameters": {
         "jsCode": "// Extraer cédula del mensaje\nconst rawMessage = $('WhatsApp Trigger1').first().json.messages[0].text.body || '';\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) || '';\n\nconst cedula = rawMessage.trim().replace(/[^0-9]/g, '');\n\n// Validar que sea un número de 5 a 11 dígitos\nif (cedula.length < 5 || cedula.length > 11) {\n  return { \n    json: { \n      success: false, \n      esCedulaValida: false,\n      celular: celular,\n      mensaje: '❌ Error: La cédula debe tener entre 5 y 11 dígitos.\\n\\nEjemplo: 1042458045' \n    } \n  };\n}\n\nreturn {\n  json: {\n    success: true,\n    esCedulaValida: true,\n    cedula: cedula,\n    celular: celular\n  }\n};\n"
       },
-      "id": "13d1b624-b5af-45e5-9611-711aec76bbf7",
+      "id": "04b9a3f7-d5c2-40df-8ada-f87110ee104f",
       "name": "Validar Cédula (Editar)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1808,
-        -3984
+        -2704,
+        -4080
       ]
     },
     {
@@ -490,13 +490,13 @@
           ]
         }
       },
-      "id": "46cce40f-38db-4ae4-8dac-fcfd8a9c8f1d",
+      "id": "2729e2b9-9f4e-4f39-9573-a3322fd59850",
       "name": "¿Cédula Válida? (Editar)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1584,
-        -3984
+        -2480,
+        -4080
       ]
     },
     {
@@ -507,13 +507,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "63501d1d-4416-45b3-b8b9-c7c4585fe2db",
+      "id": "2677fb4b-8859-42bf-a64e-8ec67399b1ce",
       "name": "Resp: Cédula Inválida (Editar)",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -1360,
-        -3888
+        -2256,
+        -3984
       ],
       "webhookId": "error-cedula-invalida-editar-webhook",
       "credentials": {
@@ -529,13 +529,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "3c07836e-b810-4195-921c-56a407a573da",
+      "id": "737f3403-58af-4709-b4dd-6878456dd18b",
       "name": "Limpiar Estado (Cédula Inválida Editar)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -3888
+        -2032,
+        -3984
       ]
     },
     {
@@ -552,26 +552,26 @@
         },
         "options": {}
       },
-      "id": "ea4f2632-f9c0-490b-8bd0-440fffb7ee78",
+      "id": "5da3c552-7c56-4622-a0df-ae9c64ecfa49",
       "name": "API: Consultar Mis Reportes",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1360,
-        -4080
+        -2256,
+        -4176
       ]
     },
     {
       "parameters": {
         "jsCode": "// Obtener la respuesta del endpoint\nconst data = $input.first().json;\nconst found = data.found;\nconst reportes = data.reportes || [];\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id;\n\nlet mensaje = `📋 *Tus Reportes para Editar*\\n\\n`;\n\nif (!found || reportes.length === 0) {\n  mensaje += `❌ No tienes reportes creados para esta cédula.\\n\\n`;\n  mensaje += `_Usa la opción 2 del menú para crear nuevos reportes._`;\n  return {\n    json: {\n      mensaje,\n      celular,\n      hayReportes: false\n    }\n  };\n}\n\nconst persona = reportes[0];\nmensaje += `👤 *Nombre:* ${persona.nombres || 'N/A'} ${persona.apellidos || 'N/A'}\\n`;\nmensaje += `🆔 *Cédula:* ${persona.numero_documento || 'N/A'}\\n`;\nmensaje += `🚖 *Placa:* ${persona.placa || 'N/A'}\\n\\n`;\nmensaje += `⚠️ *Total de Reportes Tuyos:* ${reportes.length}\\n\\n`;\n\nreportes.forEach((reporte, index) => {\n  mensaje += `📝 *Reporte #${index + 1}* (ID: ${reporte.id})\\n`;\n  mensaje += `   Nombres: ${reporte.nombres || 'N/A'}\\n`;\n  mensaje += `   Apellidos: ${reporte.apellidos || 'N/A'}\\n`;\n  mensaje += `   Placa: ${reporte.placa || 'N/A'}\\n`;\n  mensaje += `   Estado: ${reporte.estado || 'N/A'}\\n`;\n  mensaje += `   Descripción: ${reporte.descripcion || 'N/A'}\\n`;\n  mensaje += `   Valor: $${reporte.valor_reporte || 0}\\n`;\n  mensaje += `   Fecha: ${reporte.fecha_reporte || 'N/A'}\\n\\n`;\n});\n\n// Generar array de formatos individuales (uno por cada reporte)\nconst formatos = reportes.map((reporte, index) => {\n  const formatoEdicion = `${reporte.id},${reporte.nombres || ''},${reporte.apellidos || ''},${reporte.placa || ''},${reporte.valor_reporte || ''},${reporte.descripcion || ''},${reporte.estado || ''}`;\n  return {\n    celular,\n    formatoTexto: formatoEdicion,\n    numeroReporte: index + 1\n  };\n});\n\nreturn [\n  {\n    json: {\n      mensaje,\n      celular,\n      hayReportes: true,\n      formatos  // Guardamos los formatos para uso posterior\n    }\n  },\n  ...formatos.map(f => ({ json: f }))  // Retornamos cada formato como un item separado\n];\n"
       },
-      "id": "6f8ebce5-8076-4cc9-976d-20bc66f5d92b",
+      "id": "eb189b75-79ea-4131-9364-7eea69ca23be",
       "name": "Formatear Reportes para Editar",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1136,
-        -4080
+        -2032,
+        -4176
       ]
     },
     {
@@ -585,13 +585,13 @@
           ]
         }
       },
-      "id": "9a6ca1cf-9670-4c76-89f1-2ac0b635b55c",
+      "id": "279d1f2b-f921-4fdf-8674-647d9aabbac0",
       "name": "¿Tiene Reportes? (Editar)",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -912,
-        -4080
+        -1808,
+        -4176
       ]
     },
     {
@@ -602,13 +602,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "a31f41d5-280f-48b7-867f-909fcb93a429",
+      "id": "edf0f929-7d83-41d8-9afa-f1f6de7ab83d",
       "name": "Enviar: Reportes para Editar",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -4176
+        -1584,
+        -4272
       ],
       "webhookId": "enviar-reportes-editar-webhook",
       "credentials": {
@@ -620,16 +620,22 @@
     },
     {
       "parameters": {
-        "include": "specifiedFields",
-        "fields": "formatoTexto, celular"
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.formatoTexto }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
       },
-      "id": "filtrar-solo-formatos",
+      "id": "ff4fa325-a8f1-47b3-81d1-2229db67e493",
       "name": "Filtrar Solo Formatos",
-      "type": "n8n-nodes-base.itemLists",
-      "typeVersion": 3,
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
       "position": [
-        -464,
-        -4176
+        -1360,
+        -4272
       ]
     },
     {
@@ -640,13 +646,13 @@
         "textBody": "={{ $json.formatoTexto }}",
         "additionalFields": {}
       },
-      "id": "enviar-formatos-copiar",
+      "id": "4dac4cf9-2899-4750-8044-1fcb283a4e4e",
       "name": "Enviar: Formatos para Copiar",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -240,
-        -4176
+        -1136,
+        -4344
       ],
       "webhookId": "enviar-formatos-copiar-webhook",
       "credentials": {
@@ -665,13 +671,13 @@
         "jsonBody": "={{ { \"celular\": $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2), \"estado\": \"esperando_edicion_reporte\", \"opcion\": 3 } }}",
         "options": {}
       },
-      "id": "b6610145-badb-41a4-8558-b6de64cc6e1a",
+      "id": "894411a6-1406-48d3-b770-f22922867a1b",
       "name": "Guardar Estado: Esperando Edición Reporte",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -16,
-        -4176
+        -912,
+        -4272
       ]
     },
     {
@@ -682,13 +688,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "956e4653-ad1d-4655-aa34-dc479c72e9db",
+      "id": "651ee9d3-0f41-4537-9753-e338544b0ec2",
       "name": "Enviar: Sin Reportes para Editar",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -3984
+        -1584,
+        -4080
       ],
       "webhookId": "enviar-sin-reportes-editar-webhook",
       "credentials": {
@@ -704,13 +710,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "517a3995-2306-4a4d-b2c1-865d1b3e3f70",
+      "id": "ebfc0de7-f2ce-4281-bee1-5f9cd856d035",
       "name": "Limpiar Estado (Sin Reportes Editar)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -464,
-        -3984
+        -1360,
+        -4080
       ]
     },
     {
@@ -722,13 +728,13 @@
         "jsonBody": "={{ { \"celular\": $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2), \"estado\": \"esperando_datos_usuario\", \"opcion\": 5 } }}",
         "options": {}
       },
-      "id": "99bf48f2-4575-482c-8ab6-694b02f0cadd",
+      "id": "20ab8ca1-3909-480f-ae4a-9d341b1223f5",
       "name": "Guardar Estado: Esperando Datos Usuario",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -912,
-        -1408
+        -1808,
+        -1504
       ]
     },
     {
@@ -739,13 +745,13 @@
         "textBody": "Has elegido la opción 5: **👤 Crear usuario nuevo**.\n\nPor favor, envía en tu próximo mensaje los datos del usuario en el siguiente formato, *separados por coma*:\n\n`Email, Nombre Completo, Celular`\n\n**Ejemplo:**\n`usuario@ejemplo.com,Juan Pérez,3001234567`\n\nℹ️ La contraseña por defecto será: **SAC123***",
         "additionalFields": {}
       },
-      "id": "0c77d27b-2a5d-43f4-b01b-6c41821f7fb8",
+      "id": "9cd9472e-a5da-410c-8754-5d39b4b0408b",
       "name": "Pedir Datos Usuario",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -1408
+        -1584,
+        -1504
       ],
       "webhookId": "pedir-datos-usuario-webhook",
       "credentials": {
@@ -764,13 +770,13 @@
         "jsonBody": "={{ { \"celular\": $('WhatsApp Trigger1').item.json.contacts[0].wa_id.substring(2), \"estado\": \"esperando_celular_bloquear\", \"opcion\": 6 } }}",
         "options": {}
       },
-      "id": "feae045a-2997-453a-95f8-876e6cd6d597",
+      "id": "9a1b1e4e-b45d-4b1d-b572-8933dc380759",
       "name": "Guardar Estado: Esperando Celular Bloquear",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -912,
-        -1216
+        -1808,
+        -1312
       ]
     },
     {
@@ -781,13 +787,13 @@
         "textBody": "Has elegido la opción 6: **🚫 Bloquear usuario**.\n\nPor favor, envía en tu próximo mensaje el número de celular del usuario que deseas bloquear (solo números).\n\n**Ejemplo:**\n`3001234567`",
         "additionalFields": {}
       },
-      "id": "d984fce4-de34-424d-9f0a-51f2a6643abb",
+      "id": "5d2242ce-1d99-45ef-ae3c-9223950bd365",
       "name": "Pedir Celular para Bloquear",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -1216
+        -1584,
+        -1312
       ],
       "webhookId": "pedir-celular-bloquear-webhook",
       "credentials": {
@@ -801,13 +807,13 @@
       "parameters": {
         "jsCode": "// Extraer la cédula del mensaje\nconst mensaje = $('WhatsApp Trigger1').first().json.messages?.[0]?.text?.body || '';\nconst celular = $('WhatsApp Trigger1').first().json.contacts?.[0]?.wa_id.substring(2) || '';\n\n// Limpiar la cédula (solo números)\nconst cedula = mensaje.replace(/\\D/g, '');\n\n// Validar que la cédula tenga entre 5 y 11 dígitos\nconst esValida = cedula.length >= 5 && cedula.length <= 11;\n\nreturn {\n  json: {\n    cedula: cedula,\n    celular: celular,\n    esValida: esValida,\n    mensaje: esValida ? '' : '❌ Error: La cédula debe contener entre 5 y 11 dígitos. Por favor, envía una cédula válida.\\n\\nEjemplo: 1042458045'\n  }\n};"
       },
-      "id": "7e1d7a36-bea8-4a22-8769-d6b02c2aeba8",
+      "id": "fc5d50d5-de95-40d3-80ae-8fefda48e865",
       "name": "Extraer Cédula (Consulta)1",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1808,
-        -4944
+        -2704,
+        -5040
       ]
     },
     {
@@ -821,13 +827,13 @@
           ]
         }
       },
-      "id": "15f68ecb-2da7-4610-b4fd-daa4dee437da",
+      "id": "35b2f4c2-2056-41f2-bf89-838be5090004",
       "name": "¿Cédula Válida?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1584,
-        -4944
+        -2480,
+        -5040
       ]
     },
     {
@@ -838,13 +844,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "d99c3d8c-f0a1-4768-9846-03447f2a30ae",
+      "id": "72422e7c-e0ca-4fa5-9e09-36c998a77cd8",
       "name": "Resp: Cédula Inválida",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -1360,
-        -5040
+        -2256,
+        -5136
       ],
       "webhookId": "error-handler-cedula",
       "credentials": {
@@ -860,18 +866,18 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "562e0c6c-d609-41b6-aa35-a488b7d2b2ee",
+      "id": "2db5608f-ed03-4ab5-89f0-a04affbfc657",
       "name": "Limpiar Estado (Cédula Inválida)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -5040
+        -2032,
+        -5136
       ]
     },
     {
       "parameters": {
-        "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/personas/{{ $json.cedula }}",
+        "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/reportes-por-cedula/{{ $json.cedula }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -883,13 +889,13 @@
         },
         "options": {}
       },
-      "id": "b71a8a01-afaa-40eb-af5a-98f683734585",
+      "id": "4fc1f944-d55f-4493-acc2-8d50bef86825",
       "name": "API: Consultar Persona1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1360,
-        -4848
+        -2256,
+        -4944
       ]
     },
     {
@@ -903,13 +909,13 @@
           ]
         }
       },
-      "id": "03b8c77c-e02d-4a0b-9f26-87404b3193b1",
+      "id": "aa122eac-26de-489a-b2ce-52a38fab1447",
       "name": "¿Tiene Reportes?1",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1136,
-        -4848
+        -2032,
+        -4944
       ]
     },
     {
@@ -920,13 +926,13 @@
         "textBody": "Cédula no reportada en nuestra base de datos.",
         "additionalFields": {}
       },
-      "id": "653eb68c-37f6-435c-9eae-69545b08b17c",
+      "id": "d86a790d-e0d9-4b95-a7b0-6e42058d5e6b",
       "name": "Resp: Sin Reportes1",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -912,
-        -4752
+        -1808,
+        -4848
       ],
       "webhookId": "2a2cb69e-8073-4803-b248-4b7e8337a820",
       "credentials": {
@@ -938,15 +944,15 @@
     },
     {
       "parameters": {
-        "jsCode": "// Obtener la respuesta del endpoint (es un array)\nconst data = $input.first().json;\n\n// Datos generales\nconst found = data.found;\nconst reportes = data.reportes || [];\n\n// Tomar el celular desde el nodo \"WhatsApp Trigger1\"\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id;\n\n// Formateo de mensaje\nlet mensaje = `📋 *Mis Reportes*\\n\\n`;\n\nif (!found || reportes.length === 0) {\n  mensaje += `❌ No tienes reportes creados para esta cédula.\\n`;\n  return {\n    json: {\n      mensaje,\n      celular\n    }\n  };\n}\n\n// Tomar datos del primer reporte para mostrar info general\nconst persona = reportes[0];\n\nmensaje += `👤 *Nombre:* ${persona.nombres || 'N/A'} ${persona.apellidos || 'N/A'}\\n`;\nmensaje += `🆔 *Cédula:* ${persona.numero_documento || 'N/A'}\\n`;\nmensaje += `🚖 *Placa:* ${persona.placa || 'N/A'}\\n\\n`;\nmensaje += `⚠️ *Total de Reportes Tuyos:* ${reportes.length}\\n\\n`;\n\nreportes.forEach((reporte, index) => {\n  mensaje += `📝 *Reporte #${index + 1}* (ID: ${reporte.id})\\n`;\n  mensaje += `   Nombres: ${reporte.nombres || 'N/A'}\\n`;\n  mensaje += `   Apellidos: ${reporte.apellidos || 'N/A'}\\n`;\n  mensaje += `   Placa: ${reporte.placa || 'N/A'}\\n`;\n  mensaje += `   Estado: ${reporte.estado || 'N/A'}\\n`;\n  mensaje += `   Descripción: ${reporte.descripcion || 'N/A'}\\n`;\n  mensaje += `   Valor: $${reporte.valor_reporte || 0}\\n`;\n  mensaje += `   Fecha: ${reporte.fecha_reporte || 'N/A'}\\n\\n`;\n});\n\nreturn {\n  json: {\n    mensaje,\n    celular\n  }\n};\n"
+        "jsCode": "// Obtener la respuesta del endpoint (es un array)\nconst data = $input.first().json;\n\n// Datos generales\nconst found = data.found;\nconst reportes = data.reportes || [];\n\n// Tomar el celular desde el nodo \"WhatsApp Trigger1\"\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id;\n\n// Formateo de mensaje\nlet mensaje = `📋 *Reportes del Conductor*\\n\\n`;\n\nif (!found || reportes.length === 0) {\n  mensaje += `❌ No se encontraron reportes para esta cédula.\\n`;\n  return {\n    json: {\n      mensaje,\n      celular\n    }\n  };\n}\n\n// Tomar datos del primer reporte para mostrar info general\nconst persona = reportes[0];\n\nmensaje += `👤 *Nombre:* ${persona.nombres || 'N/A'} ${persona.apellidos || 'N/A'}\\n`;\nmensaje += `🆔 *Cédula:* ${persona.numero_documento || 'N/A'}\\n`;\nmensaje += `🚖 *Placa:* ${persona.placa || 'N/A'}\\n\\n`;\nmensaje += `⚠️ *Total de Reportes:* ${reportes.length}\\n\\n`;\n\nreportes.forEach((reporte, index) => {\n  mensaje += `📝 *Reporte #${index + 1}* (ID: ${reporte.id})\\n`;\n  mensaje += `   Nombres: ${reporte.nombres || 'N/A'}\\n`;\n  mensaje += `   Apellidos: ${reporte.apellidos || 'N/A'}\\n`;\n  mensaje += `   Placa: ${reporte.placa || 'N/A'}\\n`;\n  mensaje += `   Estado: ${reporte.estado || 'N/A'}\\n`;\n  mensaje += `   Descripción: ${reporte.descripcion || 'N/A'}\\n`;\n  mensaje += `   Valor: $${reporte.valor_reporte || 0}\\n`;\n  mensaje += `   Fecha: ${reporte.fecha_reporte || 'N/A'}\\n\\n`;\n});\n\nreturn {\n  json: {\n    mensaje,\n    celular\n  }\n};\n"
       },
-      "id": "17098f77-7a03-4143-8342-1145f4619b86",
+      "id": "08fc343f-eed9-4711-8af2-e5d94331422b",
       "name": "Formatear Mensaje (Consulta)1",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -912,
-        -4944
+        -1808,
+        -5040
       ]
     },
     {
@@ -957,13 +963,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "b1b6225c-50ba-4bd9-8a8d-7f4a27fa861f",
+      "id": "c0f1af9a-8a52-4b9d-908a-1247ad40026e",
       "name": "Resp: Enviar Reportes (Consulta)1",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -4944
+        -1584,
+        -5040
       ],
       "webhookId": "5a075c86-0f18-4dae-98e5-b8608db2d59c",
       "credentials": {
@@ -979,26 +985,26 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "509abaab-3aa2-40c3-b4d9-b707b241e5e7",
+      "id": "4e6b4f9b-96b3-4036-94c8-55f2f5b198f2",
       "name": "Limpiar Estado Usuario (Consulta)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -464,
-        -4944
+        -1360,
+        -5040
       ]
     },
     {
       "parameters": {
         "jsCode": "// Obtener el mensaje completo del usuario\nconst rawMessage = $('WhatsApp Trigger1').first().json.messages[0].text.body || '';\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) || '';\n\nconst parts = rawMessage.split(',').map(p => p.trim());\n\n// Soportar 6 o 7 campos\nif (parts.length < 6) {\n  return { \n    json: { \n      success: false, \n      esFormatoValido: false,\n      celular: celular,\n      mensaje: '❌ Error: El formato del mensaje es incorrecto. Deben ser mínimo 6 campos separados por comas.\\n\\nFormato: Cédula,Nombres,Apellidos,Placa,Empresa,Descripción,Valor\\n\\nEjemplo:\\n1042458045,Gohan,Rodríguez,ABC123,GohanSas,Conducción peligrosa,600000' \n    } \n  };\n}\n\n// Si son 6 campos, asumimos que no hay valor reportado\nlet numero_documento, nombres, apellidos, placa, vehiculo_afiliado, descripcion, valor_reporte_raw;\n\nif (parts.length === 6) {\n  [numero_documento, nombres, apellidos, placa, vehiculo_afiliado, descripcion] = parts;\n  valor_reporte_raw = '0';\n} else if (parts.length === 7) {\n  [numero_documento, nombres, apellidos, placa, vehiculo_afiliado, descripcion, valor_reporte_raw] = parts;\n} else {\n  return { \n    json: { \n      success: false, \n      esFormatoValido: false,\n      celular: celular,\n      mensaje: '❌ Error: Demasiados campos. Máximo 7 campos.\\n\\nFormato: Cédula,Nombres,Apellidos,Placa,Empresa,Descripción,Valor' \n    } \n  };\n}\n\n// Limpieza y Formateo de datos\nconst valor_reporte = parseInt(valor_reporte_raw.replace(/[^0-9]/g, ''), 10) || 0;\nconst estado = \"ACTIVA\";\n\nconst reportData = {\n  numero_documento: numero_documento.replace(/\\D/g, ''),\n  nombres: nombres.toUpperCase(),\n  apellidos: apellidos.toUpperCase(),\n  placa: placa.toUpperCase().replace(/\\s/g, ''),\n  vehiculo_afiliado: vehiculo_afiliado.toUpperCase(),\n  descripcion: descripcion,\n  valor_reporte: valor_reporte,\n  estado: estado\n};\n\nconst confirmationMessage = `✅ **Validación Exitosa. Datos a Registrar:**\\n- Cédula: ${reportData.numero_documento}\\n- Nombres: ${reportData.nombres} ${reportData.apellidos}\\n- Placa: ${reportData.placa}\\n- Empresa: ${reportData.vehiculo_afiliado}\\n- Descripción: ${reportData.descripcion}\\n- Valor: $${reportData.valor_reporte.toLocaleString('es-CO')}\\n\\n*Procediendo a registrar el reporte...*`;\n\nreturn {\n  json: {\n    success: true,\n    esFormatoValido: true,\n    reportData: reportData,\n    celular: celular,\n    confirmationMessage: confirmationMessage\n  }\n};\n"
       },
-      "id": "7c6290e2-7016-41c2-bcb3-bfa9988ba78e",
+      "id": "7601b315-82a4-4276-88b4-c7248df7648e",
       "name": "Extraer y Formatear Reporte1",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1808,
-        -4560
+        -2704,
+        -4656
       ]
     },
     {
@@ -1012,13 +1018,13 @@
           ]
         }
       },
-      "id": "536b311a-f29e-432b-868c-d44bf29d340c",
+      "id": "399d008b-5972-4cf6-929c-e224d2056e19",
       "name": "¿Formato Válido?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1584,
-        -4560
+        -2480,
+        -4656
       ]
     },
     {
@@ -1029,13 +1035,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "f2bec61f-7e8f-4646-84a5-3d9c37a56e45",
+      "id": "54f71487-0d43-44fe-a825-e6331572615a",
       "name": "Resp: Formato Inválido",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -1360,
-        -4656
+        -2256,
+        -4752
       ],
       "webhookId": "error-handler-formato-reporte",
       "credentials": {
@@ -1051,26 +1057,26 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "78ce006a-8f4b-40c3-b3e4-deb5cece3d9e",
+      "id": "70095dbc-b170-4261-984c-7228b7569a7f",
       "name": "Limpiar Estado (Formato Inválido)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -4656
+        -2032,
+        -4752
       ]
     },
     {
       "parameters": {
         "jsCode": "// Obtener el mensaje completo del usuario\nconst rawMessage = $('WhatsApp Trigger1').first().json.messages[0].text.body || '';\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) || '';\n\nconst parts = rawMessage.split(',').map(p => p.trim());\n\n// Validar que tenga 3 campos\nif (parts.length !== 3) {\n  return { \n    json: { \n      success: false, \n      esFormatoValido: false,\n      celular: celular,\n      mensaje: '❌ Error: El formato del mensaje es incorrecto. Deben ser 3 campos separados por comas.\\n\\nFormato: Email,Nombre,Celular\\n\\nEjemplo:\\nusuario@ejemplo.com,Juan Pérez,3001234567' \n    } \n  };\n}\n\nconst [username, nombres, celularUsuario] = parts;\n\n// Validar email básico\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (!emailRegex.test(username)) {\n  return { \n    json: { \n      success: false, \n      esFormatoValido: false,\n      celular: celular,\n      mensaje: '❌ Error: El email no es válido. Por favor usa un formato correcto (ejemplo: usuario@ejemplo.com)' \n    } \n  };\n}\n\n// Validar celular (10 dígitos)\nconst celularLimpio = celularUsuario.replace(/\\D/g, '');\nif (celularLimpio.length !== 10) {\n  return { \n    json: { \n      success: false, \n      esFormatoValido: false,\n      celular: celular,\n      mensaje: '❌ Error: El celular debe tener 10 dígitos. Ejemplo: 3001234567' \n    } \n  };\n}\n\n// Contraseña por defecto\nconst password = 'SAC123*';\n\nconst userData = {\n  username: username.toLowerCase(),\n  nombres: nombres,\n  celular: celularLimpio,\n  password: password\n};\n\nreturn {\n  json: {\n    success: true,\n    esFormatoValido: true,\n    userData: userData,\n    celular: celular\n  }\n};\n"
       },
-      "id": "967e1fc3-5a73-45e8-9a69-35279dc4e857",
+      "id": "9d0cf024-0443-42bf-824f-870c13905c39",
       "name": "Extraer y Validar Datos Usuario",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1584,
-        -3216
+        -2480,
+        -3312
       ]
     },
     {
@@ -1084,13 +1090,13 @@
           ]
         }
       },
-      "id": "70445701-5dbe-4926-8085-8f0eecfd542e",
+      "id": "0f1e1378-7b9c-4926-a2bc-4c3c3e9f2425",
       "name": "¿Datos Usuario Válidos?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1360,
-        -3216
+        -2256,
+        -3312
       ]
     },
     {
@@ -1101,13 +1107,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "f81c3e05-dd01-4152-8d84-e56031f0b663",
+      "id": "05a8ad33-334f-418d-a538-38ee225e197e",
       "name": "Resp: Datos Usuario Inválidos",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -1136,
-        -3312
+        -2032,
+        -3408
       ],
       "webhookId": "error-handler-datos-usuario",
       "credentials": {
@@ -1123,26 +1129,26 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "ad7c7957-9445-4766-bd10-4be6f887eefa",
+      "id": "56d29c4f-c6e4-4bdb-8bb4-ca1b51408b7e",
       "name": "Limpiar Estado (Datos Usuario Inválidos)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -912,
-        -3312
+        -1808,
+        -3408
       ]
     },
     {
       "parameters": {
         "jsCode": "// Obtener el ID del reporte\nconst rawMessage = $('WhatsApp Trigger1').first().json.messages[0].text.body || '';\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) || '';\n\nconst idReporte = rawMessage.trim();\n\n// Validar que sea un número\nif (!/^\\d+$/.test(idReporte)) {\n  return { \n    json: { \n      success: false, \n      esIdValido: false,\n      celular: celular,\n      mensaje: '❌ Error: El ID del reporte debe ser un número.\\n\\nEjemplo: 123' \n    } \n  };\n}\n\nreturn {\n  json: {\n    success: true,\n    esIdValido: true,\n    idReporte: idReporte,\n    celular: celular\n  }\n};\n"
       },
-      "id": "4f69b6db-4c15-4ec1-b9fc-2f9caac55570",
+      "id": "2672c9f4-70de-45c7-939f-97f24f39d511",
       "name": "Validar ID Reporte",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2928,
-        -992
+        -3824,
+        -1088
       ]
     },
     {
@@ -1156,13 +1162,13 @@
           ]
         }
       },
-      "id": "ebc10f1a-f64b-46ea-932b-fbc10949c1bf",
+      "id": "900003a8-ff22-4580-afa4-ed0f12dcbec0",
       "name": "¿ID Válido?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -2928,
-        -768
+        -3824,
+        -864
       ]
     },
     {
@@ -1173,13 +1179,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "7df2d0f9-f996-464e-8316-09b979b200e7",
+      "id": "fe1b655b-6d27-429d-b3ab-0373f8658f7b",
       "name": "Resp: ID Inválido",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -2928,
-        -96
+        -3824,
+        -192
       ],
       "webhookId": "error-id-invalido-webhook",
       "credentials": {
@@ -1195,13 +1201,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "0837cb56-d017-48c0-9f1b-eaeaefe0a5ea",
+      "id": "e316f9a3-6d60-458e-8ff9-c55c5b2cf588",
       "name": "Limpiar Estado (ID Inválido)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -2928,
-        128
+        -3824,
+        32
       ]
     },
     {
@@ -1213,13 +1219,13 @@
         "jsonBody": "={{ { \"celular\": $json.celular, \"estado\": \"esperando_edicion_reporte\", \"opcion\": 3, \"id_reporte\": $json.idReporte } }}",
         "options": {}
       },
-      "id": "dde991f9-c0a0-4cc2-9b83-2f813ca9e59b",
+      "id": "8324c0b8-f134-441a-887b-26357a54b2f7",
       "name": "Guardar Estado: Esperando Edición",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -2928,
-        -544
+        -3824,
+        -640
       ]
     },
     {
@@ -1230,13 +1236,13 @@
         "textBody": "Perfecto. Ahora envía los nuevos datos del reporte en el siguiente formato (puedes dejar campos vacíos si no quieres modificarlos, pero respeta las comas):\\n\\n`Nombres,Apellidos,Placa,Valor,Descripción,Estado`\\n\\n**Ejemplo:**\\n`Juan,Pérez,ABC123,500000,Conducción peligrosa,ACTIVA`\\n\\n_Campos vacíos:_\\n`,,,,,` (solo comas)",
         "additionalFields": {}
       },
-      "id": "916601ab-771d-4ba8-b7a4-98d3bb32ba53",
+      "id": "bb561357-768d-4782-8b9e-df5be7e3e21e",
       "name": "Pedir Datos Edición",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -2928,
-        -320
+        -3824,
+        -416
       ],
       "webhookId": "pedir-datos-edicion-webhook",
       "credentials": {
@@ -1250,13 +1256,13 @@
       "parameters": {
         "jsCode": "// Obtener los datos de edición con ID\nconst rawMessage = $('WhatsApp Trigger1').first().json.messages[0].text.body || '';\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) || '';\n\nconst parts = rawMessage.split(',').map(p => p.trim());\n\n// Debe tener 7 campos (ID + 6 datos)\nif (parts.length !== 7) {\n  return { \n    json: { \n      success: false, \n      esFormatoValido: false,\n      celular: celular,\n      mensaje: '❌ Error: El formato debe tener 7 campos separados por comas.\\n\\nFormato: ID,Nombres,Apellidos,Placa,Valor,Descripción,Estado\\n\\nEjemplo:\\n123,Juan,Pérez,ABC123,500000,Conducción peligrosa,ACTIVA\\n\\nSi no quieres modificar un campo (excepto ID), déjalo vacío pero respeta las comas.' \n    } \n  };\n}\n\nconst [idReporte, nombres, apellidos, placa, valor, descripcion, estadoReporte] = parts;\n\n// Validar que el ID sea un número\nif (!/^\\d+$/.test(idReporte)) {\n  return { \n    json: { \n      success: false, \n      esFormatoValido: false,\n      celular: celular,\n      mensaje: '❌ Error: El ID del reporte debe ser un número.\\n\\nEjemplo: 123,Juan,Pérez,ABC123,500000,Conducción peligrosa,ACTIVA' \n    } \n  };\n}\n\n// Construir objeto con solo los campos que no están vacíos\nconst datosEdicion = {};\n\nif (nombres) datosEdicion.nombres = nombres;\nif (apellidos) datosEdicion.apellidos = apellidos;\nif (placa) datosEdicion.placa = placa;\nif (valor) {\n  const valorNum = parseInt(valor.replace(/\\D/g, ''));\n  if (!isNaN(valorNum)) datosEdicion.valor_reporte = valorNum;\n}\nif (descripcion) datosEdicion.descripcion_reporte = descripcion;\nif (estadoReporte) datosEdicion.estado = estadoReporte;\n\n// Validar que al menos un campo se va a editar\nif (Object.keys(datosEdicion).length === 0) {\n  return { \n    json: { \n      success: false, \n      esFormatoValido: false,\n      celular: celular,\n      mensaje: '❌ Error: Debes proporcionar al menos un campo para editar (después del ID).' \n    } \n  };\n}\n\nreturn {\n  json: {\n    success: true,\n    esFormatoValido: true,\n    datosEdicion: datosEdicion,\n    idReporte: idReporte,\n    celular: celular\n  }\n};\n"
       },
-      "id": "f841d066-c47e-412a-a663-c4d10e9b7a3a",
+      "id": "826cd3f6-de36-4e1c-965e-052894853691",
       "name": "Procesar Datos Edición",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1584,
-        -3600
+        -2480,
+        -3696
       ]
     },
     {
@@ -1270,13 +1276,13 @@
           ]
         }
       },
-      "id": "9aec3467-d073-45ff-974f-30d75cd56dd9",
+      "id": "1a31f18c-7197-4cf1-9395-5169169e7025",
       "name": "¿Formato Edición Válido?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1360,
-        -3600
+        -2256,
+        -3696
       ]
     },
     {
@@ -1287,13 +1293,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "2641b741-1519-4a07-9b3c-01eb53950bfa",
+      "id": "566415b8-937d-46af-8eba-fc52cd93d289",
       "name": "Resp: Formato Edición Inválido",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -1136,
-        -3504
+        -2032,
+        -3600
       ],
       "webhookId": "error-formato-edicion-webhook",
       "credentials": {
@@ -1309,13 +1315,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "f802c70a-281c-4683-9084-a59dbee27c3b",
+      "id": "aee37ea5-eb91-4cf8-9e41-bc22e5e57cb2",
       "name": "Limpiar Estado (Formato Edición Inválido)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -912,
-        -3504
+        -1808,
+        -3600
       ]
     },
     {
@@ -1336,13 +1342,13 @@
         "jsonBody": "={{ $json.datosEdicion }}",
         "options": {}
       },
-      "id": "0d1a15f2-7499-4afc-9de0-23c35b0213be",
+      "id": "c1a30d23-d910-478d-a605-b7c9bf993e5e",
       "name": "API: Editar Reporte",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -3696
+        -2032,
+        -3792
       ]
     },
     {
@@ -1356,13 +1362,13 @@
           ]
         }
       },
-      "id": "5e4e3895-edd9-4624-a35c-54c6ee02527c",
+      "id": "96e015f0-b36b-42c8-8f73-779cf547c703",
       "name": "¿Edición Exitosa?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -912,
-        -3696
+        -1808,
+        -3792
       ]
     },
     {
@@ -1373,13 +1379,13 @@
         "textBody": "✅ Reporte editado exitosamente.",
         "additionalFields": {}
       },
-      "id": "90a87880-7d12-4fea-893e-1fceb759a458",
+      "id": "2b81efc5-5101-406f-9ecb-c246ab347103",
       "name": "Resp: Edición Exitosa",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -3792
+        -1584,
+        -3888
       ],
       "webhookId": "resp-edicion-exitosa-webhook",
       "credentials": {
@@ -1397,13 +1403,13 @@
         "textBody": "❌ Error al editar el reporte: {{ $json.message || 'No tienes permisos para editar este reporte o no existe.' }}",
         "additionalFields": {}
       },
-      "id": "318ad0a9-f3f6-471c-bab6-fbdc20bdf7c7",
+      "id": "f16ef3d2-76d2-40a6-a580-42cfa6ea18e0",
       "name": "Resp: Error Edición",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -3504
+        -1584,
+        -3600
       ],
       "webhookId": "resp-error-edicion-webhook",
       "credentials": {
@@ -1419,13 +1425,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "ae1d2fca-7a4a-4563-a4e5-ec681a3987c2",
+      "id": "81c39b1a-845e-45db-9d47-e0dbd9d9b424",
       "name": "Limpiar Estado (Edición)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -464,
-        -3696
+        -1360,
+        -3792
       ]
     },
     {
@@ -1437,13 +1443,13 @@
         "jsonBody": "={{ $json.userData }}",
         "options": {}
       },
-      "id": "a1d939c3-ad38-4ede-8fb2-9e7488ab3412",
+      "id": "cdfbfa4c-9e9b-4754-9a5f-d86e142fcf42",
       "name": "API: Crear Usuario",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -3120
+        -2032,
+        -3216
       ]
     },
     {
@@ -1457,13 +1463,13 @@
           ]
         }
       },
-      "id": "46943008-ac62-4ad5-a2f2-1d919ed21c64",
+      "id": "c0fbb0bf-eb45-493b-ad31-c1291a33e656",
       "name": "¿Usuario Creado?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -912,
-        -3120
+        -1808,
+        -3216
       ]
     },
     {
@@ -1474,13 +1480,13 @@
         "textBody": "✅ ¡Usuario creado exitosamente!\n\nEl nuevo usuario ya puede acceder al sistema.",
         "additionalFields": {}
       },
-      "id": "fcdfaf5a-116d-4322-9160-1751f1b8e264",
+      "id": "be45539b-9ce1-44df-b78f-fae7a26ad6d7",
       "name": "Resp: Usuario Creado",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -3312
+        -1584,
+        -3408
       ],
       "webhookId": "resp-usuario-creado-webhook",
       "credentials": {
@@ -1498,13 +1504,13 @@
         "textBody": "❌ Error al crear usuario: {{ $json.message || 'Error desconocido' }}",
         "additionalFields": {}
       },
-      "id": "a6d98d9f-8c06-4a8e-b8f6-e74fd83daf0b",
+      "id": "418ec5d3-a65e-476e-b704-34d77b0df823",
       "name": "Resp: Error Crear Usuario",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -3024
+        -1584,
+        -3120
       ],
       "webhookId": "resp-error-crear-usuario-webhook",
       "credentials": {
@@ -1520,26 +1526,26 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "f2c56e44-f993-4603-a4f2-362aa2e6e512",
+      "id": "56db940c-a1c3-435a-86d0-f92e448e086f",
       "name": "Limpiar Estado (Crear Usuario)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -464,
-        -3120
+        -1360,
+        -3216
       ]
     },
     {
       "parameters": {
         "jsCode": "// Obtener el celular a bloquear\nconst rawMessage = $('WhatsApp Trigger1').first().json.messages[0].text.body || '';\nconst celular = $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) || '';\n\n// Limpiar el celular (solo números)\nconst celularBloquear = rawMessage.replace(/\\D/g, '');\n\n// Validar que tenga 10 dígitos\nif (celularBloquear.length !== 10) {\n  return { \n    json: { \n      success: false, \n      esValido: false,\n      celular: celular,\n      mensaje: '❌ Error: El celular debe tener 10 dígitos.\\n\\nEjemplo: 3001234567' \n    } \n  };\n}\n\nreturn {\n  json: {\n    success: true,\n    esValido: true,\n    celularBloquear: celularBloquear,\n    celular: celular\n  }\n};\n"
       },
-      "id": "fcda204b-7524-48b4-81af-23ee51770c4b",
+      "id": "037ce258-43a7-4195-9a20-2145f0ff21fe",
       "name": "Extraer y Validar Celular Bloquear",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1584,
-        -2640
+        -2480,
+        -2736
       ]
     },
     {
@@ -1553,13 +1559,13 @@
           ]
         }
       },
-      "id": "fdeed402-ebdd-4aa2-adaa-3d34e98e4590",
+      "id": "bb134b2e-5087-4fb8-9d39-2865c9b35135",
       "name": "¿Celular Válido para Bloquear?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1360,
-        -2640
+        -2256,
+        -2736
       ]
     },
     {
@@ -1570,13 +1576,13 @@
         "textBody": "={{ $json.mensaje }}",
         "additionalFields": {}
       },
-      "id": "8a219c07-87cb-4916-9acf-8aad4801e311",
+      "id": "e8e49bfa-d7d4-4b20-8b54-f63dc09ffb31",
       "name": "Resp: Celular Bloquear Inválido",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -1136,
-        -2544
+        -2032,
+        -2640
       ],
       "webhookId": "error-handler-celular-bloquear",
       "credentials": {
@@ -1592,13 +1598,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "186a3f83-e4f1-48e1-a98a-bab9a5fbf0a6",
+      "id": "1ce23093-4638-4cfc-8449-21cfe55aa235",
       "name": "Limpiar Estado (Celular Bloquear Inválido)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -912,
-        -2544
+        -1808,
+        -2640
       ]
     },
     {
@@ -1607,13 +1613,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/usuarios/{{ $json.celularBloquear }}/bloquear",
         "options": {}
       },
-      "id": "add9c61f-cf55-4c1b-bcb7-d7cd808815e2",
+      "id": "a9dbe347-7164-45f4-aa0c-13855500dabf",
       "name": "API: Bloquear Usuario",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1136,
-        -2736
+        -2032,
+        -2832
       ]
     },
     {
@@ -1627,13 +1633,13 @@
           ]
         }
       },
-      "id": "f5e01a76-70c6-4ca5-9081-d23e8c2374df",
+      "id": "a852f866-3e50-47a8-b379-0a28c7f9cd68",
       "name": "¿Usuario Bloqueado?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -912,
-        -2736
+        -1808,
+        -2832
       ]
     },
     {
@@ -1644,13 +1650,13 @@
         "textBody": "✅ Usuario bloqueado exitosamente.\n\nEl usuario ya no podrá acceder al sistema.",
         "additionalFields": {}
       },
-      "id": "2499e604-ec84-4140-ab3e-fded2b4e033f",
+      "id": "61d2fe9d-dfca-4187-8d77-ab6518804502",
       "name": "Resp: Usuario Bloqueado",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -2832
+        -1584,
+        -2928
       ],
       "webhookId": "resp-usuario-bloqueado-webhook",
       "credentials": {
@@ -1668,13 +1674,13 @@
         "textBody": "❌ Error al bloquear usuario: {{ $json.message || 'Usuario no encontrado o error desconocido' }}",
         "additionalFields": {}
       },
-      "id": "afd4da7b-8c57-48c0-913d-a96f55061c60",
+      "id": "cce8e4fd-fe8b-4093-9f06-d254ca2e1500",
       "name": "Resp: Error Bloquear Usuario",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -2352
+        -1584,
+        -2448
       ],
       "webhookId": "resp-error-bloquear-usuario-webhook",
       "credentials": {
@@ -1690,13 +1696,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "c237eea2-1c39-426d-b17f-3417a8eb64ee",
+      "id": "bb20c2b2-c575-4cc2-8ebf-c4e47e6699f2",
       "name": "Limpiar Estado (Bloquear Usuario)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -464,
-        -2736
+        -1360,
+        -2832
       ]
     },
     {
@@ -1717,13 +1723,13 @@
         "jsonBody": "={{ $json.reportData }}",
         "options": {}
       },
-      "id": "e760d06c-94c7-435f-a95a-0bdfee594472",
+      "id": "4fd64caa-e202-4d14-8a79-e8ecfd860431",
       "name": "API: Registrar Reporte1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1360,
-        -4464
+        -2256,
+        -4560
       ]
     },
     {
@@ -1737,13 +1743,13 @@
           ]
         }
       },
-      "id": "51407259-4c66-4fc7-8069-08dc0724853b",
+      "id": "f806f07a-08aa-4b62-81dd-8c643304273d",
       "name": "¿Registro Exitoso?1",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -1136,
-        -4464
+        -2032,
+        -4560
       ]
     },
     {
@@ -1754,13 +1760,13 @@
         "textBody": "=¡El reporte ha sido registrado exitosamente!\n\nGracias por usar InfoSAC. Puedes volver al menú principal en cualquier momento.",
         "additionalFields": {}
       },
-      "id": "cb55f6f5-2337-4c86-b7fc-7e9b4914b7c7",
+      "id": "a9140f28-b73c-4ca3-9ec9-48ab8a8e8945",
       "name": "Resp: Reporte Exitoso1",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -912,
-        -4560
+        -1808,
+        -4656
       ],
       "webhookId": "d75e7555-14cd-4967-93e3-45e03ccae80c",
       "credentials": {
@@ -1778,13 +1784,13 @@
         "textBody": "=❌ Hubo un error al registrar el reporte. Por favor, verifica el formato de los datos e inténtalo de nuevo, o contacta a soporte si el problema persiste.\n\nError: {{ $json.message || 'Error desconocido' }}",
         "additionalFields": {}
       },
-      "id": "eb97a27c-27ab-4d5f-89fd-dd0782b6d51c",
+      "id": "8b86f7ea-8a97-48f4-9390-202c24d2e31b",
       "name": "Resp: Error al Reportar1",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -912,
-        -4368
+        -1808,
+        -4464
       ],
       "webhookId": "a87d874a-80f6-4760-ba20-e30f2bf82b61",
       "credentials": {
@@ -1800,13 +1806,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "1dc9da6a-c35b-4846-a30d-c6e919cfb207",
+      "id": "f92ee85a-7dcf-448a-9f0c-1848f56b5084",
       "name": "Limpiar Estado Usuario (Reporte)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -688,
-        -4464
+        -1584,
+        -4560
       ]
     },
     {
@@ -1815,13 +1821,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "b8cae426-592e-4006-95f9-37ae477bb6fd",
+      "id": "a8a9a527-5ac5-4ef8-af9d-3136b1c9f5e3",
       "name": "Limpiar Estado (Fallback)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -1808,
-        -1696
+        -2704,
+        -1872
       ]
     },
     {
@@ -1839,13 +1845,13 @@
         },
         "options": {}
       },
-      "id": "818df290-c0af-4c16-a7ff-8c445dcf01fa",
+      "id": "b21f7e74-0845-41cd-812e-a597ad04fb55",
       "name": "API: Generar Token Carga",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -912,
-        -1600
+        -1808,
+        -1696
       ]
     },
     {
@@ -1853,16 +1859,16 @@
         "operation": "send",
         "phoneNumberId": "821068047761861",
         "recipientPhoneNumber": "={{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id }}",
-        "textBody": "Has elegido la opción 4: **📊 Reportar masivamente (Excel)**\n\n🎯 *Tu link personal de carga masiva:*\n🔗 {{ $('API: Generar Token Carga').item.json.url }}\n\n📋 *Instrucciones:*\n1️⃣ Haz clic en el link para abrir tu página personal\n2️⃣ Descarga la plantilla Excel\n3️⃣ Llena la plantilla con tus reportes\n4️⃣ Sube el archivo en la misma página\n\n⏱️ *Este link es válido por 24 horas*\n✅ *Los reportes se asociarán automáticamente a tu usuario*\n\n💡 _Puedes importar múltiples reportes a la vez usando la plantilla._",
+        "textBody": "=Has elegido la opción 4: **📊 Reportar masivamente (Excel)**\n\n🎯 *Tu link personal de carga masiva:*\n🔗 {{ $('API: Generar Token Carga').item.json.url }}\n\n📋 *Instrucciones:*\n1️⃣ Haz clic en el link para abrir tu página personal\n2️⃣ Descarga la plantilla Excel\n3️⃣ Llena la plantilla con tus reportes\n4️⃣ Sube el archivo en la misma página\n\n⏱️ *Este link es válido por 24 horas*\n✅ *Los reportes se asociarán automáticamente a tu usuario*\n\n💡 _Puedes importar múltiples reportes a la vez usando la plantilla._",
         "additionalFields": {}
       },
-      "id": "841ecd5d-c04b-49b1-ae58-6f179242e9e9",
+      "id": "41494c48-12c2-4e84-8183-0712488a2606",
       "name": "Enviar: Link Carga Masiva",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -688,
-        -1600
+        -1584,
+        -1696
       ],
       "webhookId": "enviar-link-carga-webhook",
       "credentials": {
@@ -1878,13 +1884,13 @@
         "url": "=https://electo-infosac.fxtfoe.easypanel.host/api/estado-usuario/{{ $('WhatsApp Trigger1').first().json.contacts[0].wa_id.substring(2) }}",
         "options": {}
       },
-      "id": "36e7498e-ac35-48ff-a34d-e810ae5f6b87",
+      "id": "cd7dad81-ed77-4cb0-810f-b011a8b39e68",
       "name": "Limpiar Estado (Excel)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        -464,
-        -1600
+        -1360,
+        -1696
       ]
     },
     {
@@ -1892,16 +1898,16 @@
         "operation": "send",
         "phoneNumberId": "821068047761861",
         "recipientPhoneNumber": "={{ $('WhatsApp Trigger1').item.json.contacts[0].wa_id }}",
-        "textBody": "=Hola {{ $json.usuario.nombre }} 👋\n\nBienvenido a **SAC**, su asistente virtual para consulta de referencias de conductores.\n\nPor favor, selecciona una opción del menú enviando solo el número (1, 2, 3, 4, 5 o 6).\n\n📋 **Menú Principal**\n1. 🚕 Consultar taxistas\n2. 📝 Reportar taxistas\n3. ✏️ Editar mis reportes\n4. 📂 Reportar taxistas masivamente\n5. 👤 Crear usuario nuevo\n6. 🚫 Bloquear usuario\n\n_💡 Escribe \"menu\" en cualquier momento para volver aquí._",
+        "textBody": "=Hola {{ $json.usuario.nombre }} 👋\n\nBienvenido a **SAC**, su asistente virtual para consulta de referencias de conductores.\n\nPor favor, selecciona una opción del menú enviando solo el número (1, 2, 3, 4, 5 o 6).\n\n📋 **Menú Principal**\n1. 🚕 Consultar conductor\n2. 📝 Reportar conductor\n3. ✏️ Editar mis reportes\n4. 📂 Reportar conductor masivamente\n5. 👤 Crear usuario nuevo\n6. 🚫 Bloquear usuario\n\n_💡 Escribe \"menu\" en cualquier momento para volver aquí._",
         "additionalFields": {}
       },
-      "id": "1395d927-7e81-4490-8320-61043ad8cc31",
+      "id": "945b4d51-8285-43c0-9630-5b97fa98308b",
       "name": "Enviar: Menú Principal1",
       "type": "n8n-nodes-base.whatsApp",
       "typeVersion": 1,
       "position": [
-        -1584,
-        -2176
+        -2480,
+        -2400
       ],
       "webhookId": "2975fc13-703b-4973-8a5a-165785aa9829",
       "credentials": {
@@ -2684,6 +2690,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Guardar Estado: Esperando Edición Reporte",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -2823,11 +2836,11 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "03e4143d-8954-40cb-a3c5-ede596cf6ec3",
+  "versionId": "b2073842-6bbd-4e75-8fde-e888aba7368c",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "b31c59ac60435f4d8e1b8d0484a71fbe2f7c30530fcc10d82cd94f326515c42c"
