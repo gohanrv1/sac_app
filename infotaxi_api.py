@@ -765,12 +765,13 @@ def consultar_todos_reportes(cedula):
         
         # Buscar TODOS los reportes de esta cédula (sin filtrar por reportante)
         cursor.execute("""
-            SELECT id, Fecha_Reporte, Numero_Documento, Nombres, Apellidos,
-                   Fecha_cierre, Placa, Valor_Reporte, Descripcion_Reporte,
-                   Vehiculo_afiliado, Estado
-            FROM personas
-            WHERE Numero_Documento = %s
-            ORDER BY Fecha_Reporte DESC
+            SELECT p.id, p.Fecha_Reporte, p.Numero_Documento, p.Nombres, p.Apellidos,
+                   p.Fecha_cierre, p.Placa, p.Valor_Reporte, p.Descripcion_Reporte,
+                   p.Vehiculo_afiliado, p.Estado, u.nombres as Reportante_Nombres
+            FROM personas p
+            inner join users u on p.Reportante_Nombres = u.id_user
+            WHERE p.Numero_Documento = %s
+            ORDER BY p.Fecha_Reporte DESC
         """, (cedula,))
         
         reportes = cursor.fetchall()
