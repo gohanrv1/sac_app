@@ -677,12 +677,13 @@ def consultar_mis_reportes(cedula):
         
         # Buscar solo reportes creados por este usuario
         cursor.execute("""
-            SELECT id, Fecha_Reporte, Numero_Documento, Nombres, Apellidos,
-                   Fecha_cierre, Placa, Valor_Reporte, Descripcion_Reporte,
-                   Vehiculo_afiliado, Estado
-            FROM personas
-            WHERE Numero_Documento = %s AND Reportante_Nombres = %s
-            ORDER BY Fecha_Reporte DESC
+            SELECT p.id, p.Fecha_Reporte, p.Numero_Documento, p.Nombres, p.Apellidos,
+                   p.Fecha_cierre, p.Placa, p.Valor_Reporte, p.Descripcion_Reporte,
+                   p.Vehiculo_afiliado, p.Estado, u.nombres as Reportante_Nombres
+            FROM personas p
+            INNER JOIN users u ON p.Reportante_Nombres = u.id_user
+            WHERE p.Numero_Documento = %s AND p.Reportante_Nombres = %s
+            ORDER BY p.Fecha_Reporte DESC
         """, (cedula, request.usuario['id_user']))
         
         reportes = cursor.fetchall()
@@ -707,7 +708,8 @@ def consultar_mis_reportes(cedula):
                 'placa': r['Placa'],
                 'valor_reporte': r['Valor_Reporte'],
                 'descripcion': r['Descripcion_Reporte'],
-                'estado': r['Estado']
+                'estado': r['Estado'],
+                'reportante_nombres': r['Reportante_Nombres']
             })
         
         return jsonify({
@@ -767,8 +769,9 @@ def consultar_todos_reportes(cedula):
         cursor.execute("""
             SELECT p.id, p.Fecha_Reporte, p.Numero_Documento, p.Nombres, p.Apellidos,
                    p.Fecha_cierre, p.Placa, p.Valor_Reporte, p.Descripcion_Reporte,
-                   p.Vehiculo_afiliado, p.Estado, p.Reportante_Nombres
+                   p.Vehiculo_afiliado, p.Estado, u.nombres as Reportante_Nombres
             FROM personas p
+            inner join users u on p.Reportante_Nombres = u.id_user
             WHERE p.Numero_Documento = %s
             ORDER BY p.Fecha_Reporte DESC
         """, (cedula,))
@@ -893,8 +896,9 @@ def consultar_persona(cedula):
         cursor.execute("""
             SELECT p.id, p.Fecha_Reporte, p.Numero_Documento, p.Nombres, p.Apellidos,
                    p.Fecha_cierre, p.Placa, p.Valor_Reporte, p.Descripcion_Reporte,
-                   p.Vehiculo_afiliado, p.Estado, p.Reportante_Nombres
+                   p.Vehiculo_afiliado, p.Estado, u.nombres as Reportante_Nombres
             FROM personas p
+            INNER JOIN users u ON p.Reportante_Nombres = u.id_user
             WHERE p.Numero_Documento = %s
             ORDER BY p.Fecha_Reporte DESC
         """, (cedula,))
@@ -949,7 +953,8 @@ def consultar_persona(cedula):
                 'valor_reporte': r['Valor_Reporte'],
                 'descripcion': r['Descripcion_Reporte'],
                 'vehiculo_afiliado': r['Vehiculo_afiliado'],
-                'estado': r['Estado']
+                'estado': r['Estado'],
+                'reportante_nombres': r['Reportante_Nombres']
             })
         
         return jsonify({
