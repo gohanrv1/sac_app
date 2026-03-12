@@ -796,7 +796,8 @@ def consultar_todos_reportes(cedula):
                 'placa': r['Placa'],
                 'valor_reporte': r['Valor_Reporte'],
                 'descripcion': r['Descripcion_Reporte'],
-                'estado': r['Estado']
+                'estado': r['Estado'],
+                'reportante_nombres': r['Reportante_Nombres']
             })
         
         return jsonify({
