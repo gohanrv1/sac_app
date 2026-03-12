@@ -767,9 +767,8 @@ def consultar_todos_reportes(cedula):
         cursor.execute("""
             SELECT p.id, p.Fecha_Reporte, p.Numero_Documento, p.Nombres, p.Apellidos,
                    p.Fecha_cierre, p.Placa, p.Valor_Reporte, p.Descripcion_Reporte,
-                   p.Vehiculo_afiliado, p.Estado, u.nombres as Reportante_Nombres
+                   p.Vehiculo_afiliado, p.Estado, p.Reportante_Nombres
             FROM personas p
-            inner join users u on p.Reportante_Nombres = u.id_user
             WHERE p.Numero_Documento = %s
             ORDER BY p.Fecha_Reporte DESC
         """, (cedula,))
@@ -894,10 +893,10 @@ def consultar_persona(cedula):
         cursor.execute("""
             SELECT p.id, p.Fecha_Reporte, p.Numero_Documento, p.Nombres, p.Apellidos,
                    p.Fecha_cierre, p.Placa, p.Valor_Reporte, p.Descripcion_Reporte,
-                   p.Vehiculo_afiliado, p.Estado, u.nombres as Reportante_Nombres
-            FROM personas p inner join users u on p.Reportante_Nombres = u.id_user
-            WHERE Numero_Documento = %s
-            ORDER BY Fecha_Reporte DESC
+                   p.Vehiculo_afiliado, p.Estado, p.Reportante_Nombres
+            FROM personas p
+            WHERE p.Numero_Documento = %s
+            ORDER BY p.Fecha_Reporte DESC
         """, (cedula,))
         
         reportes = cursor.fetchall()
